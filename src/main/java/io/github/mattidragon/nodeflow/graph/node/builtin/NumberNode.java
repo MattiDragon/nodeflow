@@ -9,6 +9,8 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.ui.screen.NodeConfigScreen;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
@@ -48,6 +50,7 @@ public class NumberNode extends Node {
         return Either.<DataValue<?>[], Text>left(new DataValue[]{DataType.NUMBER.makeValue(Double.valueOf(value))});
     }
 
+    @Environment(EnvType.CLIENT)
     @Override
     public NodeConfigScreen createConfigScreen(EditorScreen parent) {
         return new ConfigScreen(parent);
