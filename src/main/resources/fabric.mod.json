@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "nodeflow",
+  "version": "${version}",
+  "name": "Nodeflow",
+  "description": "The core graphical programming system behind the advanced networking mod.",
+  "authors": [
+    "MattiDragon"
+  ],
+  "contact": {
+    "repo": "https://github.com/mattidragon/nodeflow"
+  },
+  "license": "MIT",
+  "icon": "assets/nodeflow/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "io.github.mattidragon.nodeflow.NodeFlowClient"
+    ],
+    "main": [
+      "io.github.mattidragon.nodeflow.NodeFlow"
+    ]
+  },
+  "mixins": [
+  ],
+  "accessWidener": "nodeflow.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.14.9",
+    "fabric": "*",
+    "minecraft": "1.19.2"
+  }
+}
