@@ -47,7 +47,7 @@ public class NumberNode extends Node {
 
     @Override
     protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
-        return Either.<DataValue<?>[], Text>left(new DataValue[]{DataType.NUMBER.makeValue(Double.valueOf(value))});
+        return Either.left(new DataValue<?>[]{DataType.NUMBER.makeValue(Double.valueOf(value))});
     }
 
     @Environment(EnvType.CLIENT)

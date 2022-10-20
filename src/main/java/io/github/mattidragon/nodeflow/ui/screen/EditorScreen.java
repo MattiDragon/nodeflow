@@ -39,22 +39,22 @@ public class EditorScreen extends Screen {
     public final Graph graph;
     public final Identifier texture;
 
-    private boolean isAddingNode = false;
-    private boolean isDeletingNode = false;
-    private @Nullable Connector<?> lastHoveredConnector = null;
-    private long lastHoveredTimestamp = 0;
+    protected boolean isAddingNode = false;
+    protected boolean isDeletingNode = false;
+    protected @Nullable Connector<?> lastHoveredConnector = null;
+    protected long lastHoveredTimestamp = 0;
     public @Nullable Connector<?> connectingConnector;
 
-    private ButtonWidget backButton;
-    private final Map<NodeGroup, List<ButtonWidget>> nodeButtons = new HashMap<>();
-    private final List<ButtonWidget> groupButtons = new ArrayList<>();
+    protected ButtonWidget backButton;
+    protected final Map<NodeGroup, List<ButtonWidget>> nodeButtons = new HashMap<>();
+    protected final List<ButtonWidget> groupButtons = new ArrayList<>();
     @Nullable
-    private NodeGroup activeGroup = null;
+    protected NodeGroup activeGroup = null;
 
-    private ButtonWidget plusButton;
-    private ButtonWidget deleteButton;
-    private AddNodesWidget addMenu;
-    private EditorAreaWidget area;
+    protected ButtonWidget plusButton;
+    protected ButtonWidget deleteButton;
+    protected AddNodesWidget addMenu;
+    protected EditorAreaWidget area;
 
     public EditorScreen(Text title, Graph graph) {
         this(title, graph, DEFAULT_TEXTURE);

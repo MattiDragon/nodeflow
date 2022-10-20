@@ -53,6 +53,10 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         children.add(child);
     }
 
+    public int getZoom() {
+        return zoom;
+    }
+
     public float getScale() {
         if (Float.isNaN(scale))
             scale = (float) Math.pow(2, zoom / 2.0);
