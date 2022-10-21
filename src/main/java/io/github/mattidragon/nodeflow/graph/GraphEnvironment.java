@@ -165,8 +165,6 @@ public record GraphEnvironment(List<NodeType<?>> allowedNodeTypes, List<DataType
                             .append(type)
                             .append(", splittable: ")
                             .append(type.splittable())
-                            .append(", class: ")
-                            .append(type.type().getSimpleName())
                             .append("]\n");
                 }
             }

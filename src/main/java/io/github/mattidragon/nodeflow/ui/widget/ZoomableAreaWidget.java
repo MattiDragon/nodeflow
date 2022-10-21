@@ -219,4 +219,16 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     public double getViewY() {
         return viewY;
     }
+
+    public void setViewX(double viewX) {
+        this.viewX = viewX;
+    }
+
+    public void setViewY(double viewY) {
+        this.viewY = viewY;
+    }
+
+    public void setZoom(int zoom) {
+        this.zoom = zoom;
+    }
 }
