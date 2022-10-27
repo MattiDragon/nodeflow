@@ -8,6 +8,8 @@
   "nodeflow.graph.error.unresolvable_nodes": "Could not resolve graph, probably recursive (%s/%s nodes processed)",
   "nodeflow.graph.error.missing_context": "A node is missing the following context: %s",
 
+  "nodeflow.editor.button.duplicate": "Duplicate",
+  "nodeflow.editor.button.delete": "Delete",
   "nodeflow.editor.button.add_node": "Add Node",
   "nodeflow.editor.button.delete_nodes": "Delete Nodes",
   "nodeflow.editor.button.cancel": "Cancel",

@@ -1,18 +1,110 @@
 package io.github.mattidragon.nodeflow.ui.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     private final EditorScreen parent;
 
+    private NodeWidget clickedNode;
+    private final ButtonWidget cancelButton;
+    private final ButtonWidget duplicateButton;
+    private final ButtonWidget deleteButton;
+
     public EditorAreaWidget(int x, int y, int width, int height, EditorScreen parent) {
         super(x, y, width, height);
         this.parent = parent;
+        cancelButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.cancel"), button -> closeMenu());
+        duplicateButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), button -> duplicateNode());
+        deleteButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.delete"), button -> deleteNode());
+        closeMenu();
+    }
+
+    private void closeMenu() {
+        duplicateButton.active = duplicateButton.visible = false;
+        deleteButton.active = deleteButton.visible = false;
+        cancelButton.active = cancelButton.visible = false;
+        clickedNode = null;
+    }
+
+    private void deleteNode() {
+        if (clickedNode == null) {
+            NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
+            return;
+        }
+        parent.removeNode(clickedNode);
+        closeMenu();
+    }
+
+    private void duplicateNode() {
+        if (clickedNode == null) {
+            NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
+            return;
+        }
+        var nbt = new NbtCompound();
+        var oldNode = clickedNode.node;
+        oldNode.writeNbt(nbt);
+
+        var newNode = oldNode.type.generator().apply(parent.graph);
+        newNode.readNbt(nbt);
+        newNode.id = UUID.randomUUID();
+        newNode.guiX = oldNode.guiX + 10;
+        newNode.guiY = oldNode.guiY + 10;
+
+        parent.graph.addNode(newNode);
+        add(new NodeWidget(newNode, parent));
+        parent.syncGraph();
+        closeMenu();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+            for(var node : this.children()) {
+                if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
+                    cancelButton.active = cancelButton.visible = true;
+                    cancelButton.x = (int) mouseX;
+                    cancelButton.y = (int) mouseY;
+                    clickedNode = node;
+                    duplicateButton.active = duplicateButton.visible = true;
+                    duplicateButton.x = (int) mouseX;
+                    duplicateButton.y = (int) mouseY + 10;
+                    deleteButton.active = deleteButton.visible = true;
+                    deleteButton.x = (int) mouseX;
+                    deleteButton.y = (int) mouseY + 20;
+
+                    return true;
+                }
+            }
+        }
+        if (clickedNode != null) {
+            var result = cancelButton.mouseClicked(mouseX, mouseY, button)
+                    || duplicateButton.mouseClicked(mouseX, mouseY, button)
+                    || deleteButton.mouseClicked(mouseX, mouseY, button);
+            if (!result)
+                closeMenu();
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        super.render(matrices, mouseX, mouseY, delta);
+        cancelButton.render(matrices, mouseX, mouseY, delta);
+        duplicateButton.render(matrices, mouseX, mouseY, delta);
+        deleteButton.render(matrices, mouseX, mouseY, delta);
     }
 
     @Override
@@ -94,6 +186,5 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1, 0).color(color).next();
             bufferBuilder.vertex(matrix, x1, y1, 0).color(color).next();
         }
-
     }
 }

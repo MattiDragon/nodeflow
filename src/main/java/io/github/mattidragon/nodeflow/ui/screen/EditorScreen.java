@@ -11,6 +11,7 @@ import io.github.mattidragon.nodeflow.ui.MessageToast;
 import io.github.mattidragon.nodeflow.ui.widget.EditorAreaWidget;
 import io.github.mattidragon.nodeflow.ui.widget.NodeWidget;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
@@ -72,6 +73,11 @@ public class EditorScreen extends Screen {
         }
         var miscGroup = new NodeGroup(Text.translatable("group.nodeflow.misc"), List.copyOf(miscNodes));
         addGroup(graph, miscNodes, miscGroup);
+    }
+
+    @Override
+    public <T extends Element & Drawable & Selectable> T addDrawableChild(T drawableElement) {
+        return super.addDrawableChild(drawableElement);
     }
 
     private void addGroup(Graph graph, HashSet<NodeType<?>> miscNodes, NodeGroup group) {

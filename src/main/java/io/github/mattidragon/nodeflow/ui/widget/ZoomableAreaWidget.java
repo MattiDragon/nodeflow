@@ -145,16 +145,16 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
         switch (keyCode) {
             case GLFW.GLFW_KEY_UP:
-                viewY -= 10;
-                break;
-            case GLFW.GLFW_KEY_DOWN:
                 viewY += 10;
                 break;
+            case GLFW.GLFW_KEY_DOWN:
+                viewY -= 10;
+                break;
             case GLFW.GLFW_KEY_RIGHT:
-                viewX += 10;
+                viewX -= 10;
                 break;
             case GLFW.GLFW_KEY_LEFT:
-                viewX -= 10;
+                viewX += 10;
                 break;
             case GLFW.GLFW_KEY_MINUS:
             case GLFW.GLFW_KEY_KP_SUBTRACT:
