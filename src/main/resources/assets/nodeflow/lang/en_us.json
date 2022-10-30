@@ -10,9 +10,9 @@
 
   "nodeflow.editor.button.duplicate": "Duplicate",
   "nodeflow.editor.button.delete": "Delete",
+  "nodeflow.editor.button.configure": "Configure",
   "nodeflow.editor.button.add_node": "Add Node",
   "nodeflow.editor.button.delete_nodes": "Delete Nodes",
-  "nodeflow.editor.button.cancel": "Cancel",
   "nodeflow.editor.button.config": "Configuration",
   "nodeflow.editor.button.config.tooltip": "Click to configure",
   "nodeflow.editor.button.config.tooltip.errors": "Errors:",

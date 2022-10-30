@@ -170,8 +170,8 @@ public class EditorScreen extends Screen {
         plusButton.visible = !isDeletingNode;
         //area.visible = !isAddingNode;
         area.active = !isAddingNode;
-        deleteButton.setMessage(Text.translatable(isDeletingNode ? "nodeflow.editor.button.cancel" : "nodeflow.editor.button.delete_nodes"));
-        plusButton.setMessage(Text.translatable(isAddingNode ? "nodeflow.editor.button.cancel" : "nodeflow.editor.button.add_node"));
+        deleteButton.setMessage(isDeletingNode ? ScreenTexts.CANCEL : Text.translatable("nodeflow.editor.button.delete_nodes"));
+        plusButton.setMessage(isAddingNode ? ScreenTexts.CANCEL : Text.translatable("nodeflow.editor.button.add_node"));
     }
 
     public void removeNode(NodeWidget node) {

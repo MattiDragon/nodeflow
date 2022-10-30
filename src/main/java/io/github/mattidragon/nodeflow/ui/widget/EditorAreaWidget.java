@@ -3,10 +3,12 @@ package io.github.mattidragon.nodeflow.ui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
@@ -17,29 +19,22 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     private final EditorScreen parent;
 
     private NodeWidget clickedNode;
-    private final ButtonWidget cancelButton;
-    private final ButtonWidget duplicateButton;
-    private final ButtonWidget deleteButton;
+    private ButtonWidget[] contextButtons = null;
 
     public EditorAreaWidget(int x, int y, int width, int height, EditorScreen parent) {
         super(x, y, width, height);
         this.parent = parent;
-        cancelButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.cancel"), button -> closeMenu());
-        duplicateButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), button -> duplicateNode());
-        deleteButton = new ButtonWidget(0, 0, 100, 10, Text.translatable("nodeflow.editor.button.delete"), button -> deleteNode());
         closeMenu();
     }
 
     private void closeMenu() {
-        duplicateButton.active = duplicateButton.visible = false;
-        deleteButton.active = deleteButton.visible = false;
-        cancelButton.active = cancelButton.visible = false;
+        contextButtons = null;
         clickedNode = null;
     }
 
     private void deleteNode() {
         if (clickedNode == null) {
-            NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
+            NodeFlow.LOGGER.warn("Clicked delete key without clicking node");
             return;
         }
         parent.removeNode(clickedNode);
@@ -67,30 +62,42 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         closeMenu();
     }
 
+    private void configureNode() {
+        if (clickedNode == null) {
+            NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
+            return;
+        }
+        MinecraftClient.getInstance().setScreen(clickedNode.node.createConfigScreen(parent));
+        closeMenu();
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
             for(var node : this.children()) {
                 if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
-                    cancelButton.active = cancelButton.visible = true;
-                    cancelButton.x = (int) mouseX;
-                    cancelButton.y = (int) mouseY;
-                    clickedNode = node;
-                    duplicateButton.active = duplicateButton.visible = true;
-                    duplicateButton.x = (int) mouseX;
-                    duplicateButton.y = (int) mouseY + 10;
-                    deleteButton.active = deleteButton.visible = true;
-                    deleteButton.x = (int) mouseX;
-                    deleteButton.y = (int) mouseY + 20;
-
+                    if (node.node.hasConfig())
+                        contextButtons = new ButtonWidget[] {
+                                new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()),
+                                new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
+                                new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 10, Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()),
+                                new ButtonWidget((int) mouseX, (int) mouseY + 30, 100, 10, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode())};
+                    else
+                        contextButtons = new ButtonWidget[] {
+                                new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()),
+                                new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
+                                new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 10, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode())};
                     return true;
                 }
             }
         }
         if (clickedNode != null) {
-            var result = cancelButton.mouseClicked(mouseX, mouseY, button)
-                    || duplicateButton.mouseClicked(mouseX, mouseY, button)
-                    || deleteButton.mouseClicked(mouseX, mouseY, button);
+            var result = false;
+            for (var contextButton : contextButtons) {
+                result = contextButton.mouseClicked(mouseX, mouseY, button);
+                if (result)
+                    break;
+            }
             if (!result)
                 closeMenu();
             return true;
@@ -102,9 +109,9 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        cancelButton.render(matrices, mouseX, mouseY, delta);
-        duplicateButton.render(matrices, mouseX, mouseY, delta);
-        deleteButton.render(matrices, mouseX, mouseY, delta);
+        for (var contextButton : contextButtons) {
+            contextButton.render(matrices, mouseX, mouseY, delta);
+        }
     }
 
     @Override
