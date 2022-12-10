@@ -19,7 +19,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     private final EditorScreen parent;
 
     private NodeWidget clickedNode;
-    private ButtonWidget[] contextButtons = null;
+    private ButtonWidget[] contextButtons = new ButtonWidget[0];
 
     public EditorAreaWidget(int x, int y, int width, int height, EditorScreen parent) {
         super(x, y, width, height);
@@ -28,7 +28,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     private void closeMenu() {
-        contextButtons = null;
+        contextButtons = new ButtonWidget[0];
         clickedNode = null;
     }
 
@@ -78,15 +78,15 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
                     if (node.node.hasConfig())
                         contextButtons = new ButtonWidget[] {
-                                new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()),
-                                new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
-                                new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 10, Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()),
-                                new ButtonWidget((int) mouseX, (int) mouseY + 30, 100, 10, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode())};
+                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()).dimensions((int) mouseX, (int) mouseY, 100, 10).build(),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()).dimensions((int) mouseX, (int) mouseY + 10, 100, 10).build(),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()).dimensions((int) mouseX, (int) mouseY + 20, 100, 10).build(),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()).dimensions((int) mouseX, (int) mouseY + 30, 100, 10).build()};
                     else
                         contextButtons = new ButtonWidget[] {
-                                new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()),
-                                new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
-                                new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 10, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode())};
+                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()).dimensions((int) mouseX, (int) mouseY, 100, 10).build(),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()).dimensions((int) mouseX, (int) mouseY + 10, 100, 10).build(),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()).dimensions((int) mouseX, (int) mouseY + 20, 100, 10).build()};
                     return true;
                 }
             }
@@ -120,7 +120,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     private void renderConnectors(MatrixStack matrices, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         RenderSystem.enableBlend();
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
@@ -147,7 +147,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             renderConnectorLine(matrices, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color() | 0xaa000000);
         });
 
-        BufferRenderer.drawWithShader(bufferBuilder.end());
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         RenderSystem.disableBlend();
     }
 

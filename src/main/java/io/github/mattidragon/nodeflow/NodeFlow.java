@@ -7,8 +7,9 @@ import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreenHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class NodeFlow implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Registry.register(Registry.SCREEN_HANDLER, id("editor_screen"), SCREEN_HANDLER);
+        Registry.register(Registries.SCREEN_HANDLER, id("editor_screen"), SCREEN_HANDLER);
         GraphSyncPacket.register();
         NodeType.register();
         DataType.register();
