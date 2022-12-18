@@ -226,7 +226,7 @@ public class EditorScreen extends Screen {
             Arrays.stream(element.parent().getOutputs())
                     .map(graph::getConnections)
                     .flatMap(Set::stream)
-                    .map(connection -> connection.getSourceConnector(graph))
+                    .map(connection -> connection.getTargetConnector(graph))
                     .filter(Objects::nonNull)
                     .forEach(stack::push);
         }
