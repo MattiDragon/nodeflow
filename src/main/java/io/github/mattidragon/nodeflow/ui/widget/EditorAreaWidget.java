@@ -87,6 +87,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                                 ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()).dimensions((int) mouseX, (int) mouseY, 100, 10).build(),
                                 ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()).dimensions((int) mouseX, (int) mouseY + 10, 100, 10).build(),
                                 ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()).dimensions((int) mouseX, (int) mouseY + 20, 100, 10).build()};
+                    clickedNode = node;
                     return true;
                 }
             }
