@@ -174,8 +174,10 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (Screen.isPaste(keyCode))
-            pasteNode(getViewX(), getViewY());
+        if (Screen.isPaste(keyCode)) {
+            pasteNode(x + width / 2.0, x + height / 2.0);
+            return true;
+        }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

@@ -92,6 +92,9 @@ public class EditorScreen extends Screen {
             buttons.add(ButtonWidget.builder(type.name(), button1 -> {
                 toggleAddingMode();
                 var node = type.generator().apply(graph);
+                node.guiX = (int) area.modifyX(width / 2.0);
+                node.guiY = (int) area.modifyY(height / 2.0);
+
                 graph.addNode(node);
                 var widget = new NodeWidget(node, this);
                 area.add(widget);
@@ -140,6 +143,7 @@ public class EditorScreen extends Screen {
             entries.add(new AddNodesWidget.Entry(currentButtons));
         }
         addMenu.replaceEntries(entries);
+        addMenu.setScrollAmount(0);
     }
 
     public void syncGraph() {}
