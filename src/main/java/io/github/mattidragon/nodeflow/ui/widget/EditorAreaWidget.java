@@ -4,12 +4,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
@@ -76,17 +78,18 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
             for(var node : this.children()) {
                 if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
-                    if (node.node.hasConfig())
-                        contextButtons = new ButtonWidget[] {
-                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()).dimensions((int) mouseX, (int) mouseY, 100, 10).build(),
-                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()).dimensions((int) mouseX, (int) mouseY + 10, 100, 10).build(),
-                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()).dimensions((int) mouseX, (int) mouseY + 20, 100, 10).build(),
-                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()).dimensions((int) mouseX, (int) mouseY + 30, 100, 10).build()};
-                    else
-                        contextButtons = new ButtonWidget[] {
-                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()).dimensions((int) mouseX, (int) mouseY, 100, 10).build(),
-                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()).dimensions((int) mouseX, (int) mouseY + 10, 100, 10).build(),
-                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()).dimensions((int) mouseX, (int) mouseY + 20, 100, 10).build()};
+                    if (node.node.hasConfig()) {
+                        setContextButtons(mouseX, mouseY,
+                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
+                    } else {
+                        setContextButtons(mouseX, mouseY,
+                                ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()),
+                                ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
+                    }
                     clickedNode = node;
                     return true;
                 }
@@ -105,6 +108,14 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void setContextButtons(double mouseX, double mouseY, ButtonWidget.Builder... builders) {
+        var buttons = new ButtonWidget[builders.length];
+        for (int i = 0; i < builders.length; i++) {
+            buttons[i] = builders[i].dimensions((int) mouseX, (int) (mouseY + 12 * i), 100, 12).build();
+        }
+        contextButtons = buttons;
     }
 
     @Override

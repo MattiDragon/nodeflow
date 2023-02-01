@@ -4,6 +4,7 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -217,5 +218,15 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
     public void setZoom(int zoom) {
         this.zoom = zoom;
+    }
+
+    @Override
+    public void setFocused(@Nullable Element focused) {
+        //noinspection SuspiciousMethodCalls
+        if (children.remove(focused)) { // Move the child to first place when clicked (hacky)
+            //noinspection unchecked
+            children.add((T) focused);
+        }
+        super.setFocused(focused);
     }
 }
