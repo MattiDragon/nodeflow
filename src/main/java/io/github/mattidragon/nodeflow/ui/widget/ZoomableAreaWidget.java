@@ -1,6 +1,5 @@
 package io.github.mattidragon.nodeflow.ui.widget;
 
-import com.google.common.collect.Lists;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.util.math.MatrixStack;
@@ -144,27 +143,15 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             return true;
 
         switch (keyCode) {
-            case GLFW.GLFW_KEY_UP:
-                viewY += 10;
-                break;
-            case GLFW.GLFW_KEY_DOWN:
-                viewY -= 10;
-                break;
-            case GLFW.GLFW_KEY_RIGHT:
-                viewX -= 10;
-                break;
-            case GLFW.GLFW_KEY_LEFT:
-                viewX += 10;
-                break;
-            case GLFW.GLFW_KEY_MINUS:
-            case GLFW.GLFW_KEY_KP_SUBTRACT:
-                addZoom(-1);
-                break;
-            case GLFW.GLFW_KEY_KP_ADD:
-                addZoom(1);
-                break;
-            default:
+            case GLFW.GLFW_KEY_UP -> viewY += 10;
+            case GLFW.GLFW_KEY_DOWN -> viewY -= 10;
+            case GLFW.GLFW_KEY_RIGHT -> viewX -= 10;
+            case GLFW.GLFW_KEY_LEFT -> viewX += 10;
+            case GLFW.GLFW_KEY_MINUS, GLFW.GLFW_KEY_KP_SUBTRACT -> addZoom(-1);
+            case GLFW.GLFW_KEY_KP_ADD -> addZoom(1);
+            default -> {
                 return false;
+            }
         }
         return true;
     }
@@ -179,7 +166,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         var scale = getScale();
         matrices.scale(scale, scale, scale);
 
-        for (var child : Lists.reverse(children)) {
+        for (var child : children) {
             child.render(matrices, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
         }
 
