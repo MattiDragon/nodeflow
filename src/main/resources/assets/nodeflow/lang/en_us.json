@@ -9,6 +9,7 @@
   "nodeflow.graph.error.missing_context": "A node is missing the following context: %s",
 
   "nodeflow.editor.button.copy": "Copy",
+  "nodeflow.editor.button.cut": "Cut",
   "nodeflow.editor.button.paste": "Paste",
   "nodeflow.editor.button.duplicate": "Duplicate",
   "nodeflow.editor.button.delete": "Delete",

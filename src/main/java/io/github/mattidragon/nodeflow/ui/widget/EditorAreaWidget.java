@@ -95,6 +95,30 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         closeMenu();
     }
 
+    private void cutNode() {
+        if (clickedNode == null) {
+            NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
+            return;
+        }
+        var nbt = new NbtCompound();
+        clickedNode.node.writeNbt(nbt);
+        nbt.remove("guiX");
+        nbt.remove("guiY");
+        nbt.remove("id");
+
+        var bytes = new ByteArrayOutputStream();
+        try (var out = Base64.getEncoder().wrap(bytes)) {
+            NbtIo.writeCompressed(nbt, out);
+        } catch (IOException e) {
+            NodeFlow.LOGGER.warn("Failed to cut node", e);
+            return;
+        }
+        MinecraftClient.getInstance().keyboard.setClipboard(CLIPBOARD_PREFIX + bytes);
+
+        parent.removeNode(clickedNode);
+        closeMenu();
+    }
+
     private void pasteNode(double mouseX, double mouseY) {
         var clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
         if (!clipboard.startsWith(CLIPBOARD_PREFIX))
@@ -143,6 +167,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                     buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()));
                     buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
                     buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode()));
+                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode()));
                     if (node.node.hasConfig())
                         buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()));
                     setContextButtons(mouseX, mouseY, buttons);
