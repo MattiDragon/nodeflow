@@ -189,7 +189,10 @@ public class EditorScreen extends Screen {
         var row = findConnectorAt(mouseX, mouseY);
         if (row == null) return;
         if (connectingConnector == null) return;
-        if (row == connectingConnector) return;
+        if (row.equals(connectingConnector)) {
+            graph.removeConnections(connectingConnector);
+            return;
+        }
 
         if (connectingConnector.isOutput() == row.isOutput()) {
             if (row.isOutput())
