@@ -47,9 +47,9 @@ public class NodeFlowClient implements ClientModInitializer {
                             super.init();
                             var widget = addDrawableChild(new ZoomableAreaWidget<ButtonWidget>(64, 64, width - 128, height - 128));
 
-                            widget.add(ButtonWidget.builder(Text.literal("1"), button -> System.out.println("1")).dimensions(0, 0, 20, 20).build());
-                            widget.add(ButtonWidget.builder(Text.literal("2"), button -> System.out.println("2")).dimensions(0, 30, 20, 20).build());
-                            widget.add(ButtonWidget.builder(Text.literal("3"), button -> System.out.println("3")).dimensions(30, 0, 20, 20).build());
+                            widget.add(new ButtonWidget(0, 0, 20, 20, Text.literal("1"), button -> System.out.println("1")));
+                            widget.add(new ButtonWidget(0, 30, 20, 20, Text.literal("2"), button -> System.out.println("2")));
+                            widget.add(new ButtonWidget(30, 0, 20, 20, Text.literal("3"), button -> System.out.println("3")));
 
                             //addDrawableChild(new ButtonWidget(0, 0, 20, 20, Text.literal("+"), button -> {}));
 

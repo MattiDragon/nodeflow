@@ -14,7 +14,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.joml.Matrix4f;
+import net.minecraft.util.math.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,14 +30,15 @@ public class NodeWidget extends ClickableWidget {
 
     public NodeWidget(Node node, EditorScreen parent) {
         super(node.guiX, node.guiY, calcWidth(node, Screens.getTextRenderer(parent)), 24 + 8 + (node.getInputs().length + node.getOutputs().length) * ROW_HEIGHT, node.getName());
-        setPos(getX() - width / 2, getY() - height / 2);
+        x -= width / 2;
+        y -= height / 2;
 
         this.node = node;
         this.parent = parent;
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    public void appendNarrations(NarrationMessageBuilder builder) {
         //TODO: implement
     }
 
@@ -56,9 +57,9 @@ public class NodeWidget extends ClickableWidget {
         var i = 0;
 
         for (var input : node.getInputs())
-            segments[i++] = new Segment(getX(), getY() + 12 + i * ROW_HEIGHT, false, input);
+            segments[i++] = new Segment(x, y + 12 + i * ROW_HEIGHT, false, input);
         for (var output : node.getOutputs())
-            segments[i++] = new Segment(getX(), getY() + 12 + i * ROW_HEIGHT, true, output);
+            segments[i++] = new Segment(x, y + 12 + i * ROW_HEIGHT, true, output);
 
         return segments;
     }
@@ -70,10 +71,10 @@ public class NodeWidget extends ClickableWidget {
             return;
         }
 
-        dragX = (int) (getX() - mouseX);
-        dragY = (int) (getY() - mouseY);
+        dragX = (int) (x - mouseX);
+        dragY = (int) (y - mouseY);
 
-        if (node.hasConfig() && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20) {
+        if (node.hasConfig() && mouseX >= x + width - 20 && mouseX <= x + width - 4 && mouseY >= y + 4 && mouseY <= y + 20) {
             MinecraftClient.getInstance().setScreen(node.createConfigScreen(parent));
             return;
         }
@@ -90,15 +91,15 @@ public class NodeWidget extends ClickableWidget {
     protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
         if (parent.connectingConnector != null) return;
 
-        setX((int) (mouseX + dragX));
-        setY((int) (mouseY + dragY));
+        x = (int) (mouseX + dragX);
+        y = (int) (mouseY + dragY);
 
-        node.guiX = getX() + width / 2;
-        node.guiY = getY() + height / 2;
+        node.guiX = x + width / 2;
+        node.guiY = y + height / 2;
     }
 
     public void renderTooltip(MatrixStack matrices, int mouseX, int mouseY) {
-        if (mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20) {
+        if (mouseX >= x + width - 20 && mouseX <= x + width - 4 && mouseY >= y + 4 && mouseY <= y + 20) {
             var tooltip = new ArrayList<Text>();
             var hasError = !node.validate().isEmpty() || !node.isFullyConnected();
 
@@ -122,60 +123,60 @@ public class NodeWidget extends ClickableWidget {
         var matrix = matrices.peek().getPositionMatrix();
         var segments = calculateSegments();
 
-        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, parent.texture);
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
 
         int columnCount = width / 16 - 1;
         for (int i = 0; i < columnCount; i++) {
-            addQuad(matrix, getX() + 8 + i * 16, getY(), 32 + 8, 0, 16, 24);
+            addQuad(matrix, x + 8 + i * 16, y, 32 + 8, 0, 16, 24);
         }
-        addQuad(matrix, getX() + 8 + columnCount * 16, getY(), 32 + 8, 0, width - (16 + columnCount * 16), 24);
+        addQuad(matrix, x + 8 + columnCount * 16, y, 32 + 8, 0, width - (16 + columnCount * 16), 24);
 
-        addQuad(matrix, getX(), getY(), 32, 0, 8, 24);
-        addQuad(matrix, getX() + width - 8, getY(), 32 + 24, 0, 8, 24);
+        addQuad(matrix, x, y, 32, 0, 8, 24);
+        addQuad(matrix, x + width - 8, y, 32 + 24, 0, 8, 24);
 
         var status = 0xffffffff;
         if (!node.isFullyConnected())
             status = 0xffffaa55;
         if (!node.validate().isEmpty())
             status = 0xffffaa55;
-        if (node.hasConfig() && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20)
+        if (node.hasConfig() && mouseX >= x + width - 20 && mouseX <= x + width - 4 && mouseY >= y + 4 && mouseY <= y + 20)
             status = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty())
-            addQuad(matrix, getX() + width - 20, getY() + 4, 112, 4, 16, 16, status);
+            addQuad(matrix, x + width - 20, y + 4, 112, 4, 16, 16, status);
         else if (node.hasConfig())
-            addQuad(matrix, getX() + width - 20, getY() + 4, 96, 4, 16, 16, status);
+            addQuad(matrix, x + width - 20, y + 4, 96, 4, 16, 16, status);
 
         for (var segment : segments) {
             for (int i = 0; i < columnCount; i++) {
-                addQuad(matrix, getX() + 8 + i * 16, segment.y, 32 + 8, 8, 16, 12);
+                addQuad(matrix, x + 8 + i * 16, segment.y, 32 + 8, 8, 16, 12);
             }
-            addQuad(matrix, getX() + 8 + columnCount * 16, segment.y, 32 + 8, 8, width - (16 + columnCount * 16), 12);
+            addQuad(matrix, x + 8 + columnCount * 16, segment.y, 32 + 8, 8, width - (16 + columnCount * 16), 12);
 
-            addQuad(matrix, getX(), segment.y, 32, 8, 8, 12);
-            addQuad(matrix, getX() + width - 8, segment.y, 32 + 24, 8, 8, 12);
+            addQuad(matrix, x, segment.y, 32, 8, 8, 12);
+            addQuad(matrix, x + width - 8, segment.y, 32 + 24, 8, 8, 12);
         }
 
         for (int i = 0; i < columnCount; i++) {
-            addQuad(matrix, getX() + 8 + i * 16, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, 16, 8);
+            addQuad(matrix, x + 8 + i * 16, y + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, 16, 8);
         }
-        addQuad(matrix, getX() + 8 + columnCount * 16, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, width - (16 + columnCount * 16), 8);
+        addQuad(matrix, x + 8 + columnCount * 16, y + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, width - (16 + columnCount * 16), 8);
 
-        addQuad(matrix, getX(), getY() + 24 + segments.length * ROW_HEIGHT, 32, 24, 8, 8);
-        addQuad(matrix, getX() + width - 8, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 24, 24, 8, 8);
+        addQuad(matrix, x, y + 24 + segments.length * ROW_HEIGHT, 32, 24, 8, 8);
+        addQuad(matrix, x + width - 8, y + 24 + segments.length * ROW_HEIGHT, 32 + 24, 24, 8, 8);
 
         //addQuad(matrix, x, y + 24 + segments.length * ROW_SIZE, 32, 24, WIDTH, 8);
 
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferRenderer.drawWithShader(bufferBuilder.end());
 
         for (var segment : segments) {
             segment.render(matrices, mouseX, mouseY);
         }
 
-        textRenderer.draw(matrices, getMessage(), getX() + 7, getY() + 7, 0x404040);
+        textRenderer.draw(matrices, getMessage(), x + 7, y + 7, 0x404040);
     }
 
     private static void addQuad(Matrix4f matrix, int x, int y, int u, int v, int width, int height) {
@@ -233,7 +234,7 @@ public class NodeWidget extends ClickableWidget {
             var matrix = matrices.peek().getPositionMatrix();
             boolean hovered = hasConnectorAt(mouseX, mouseY);
 
-            RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, parent.texture);
             RenderSystem.setShaderColor(hovered ? 2 : 1, hovered ? 2 : 1, hovered ? 2 : 1, 1);
             BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
@@ -241,7 +242,7 @@ public class NodeWidget extends ClickableWidget {
 
             addQuad(matrix, getConnectorX(), getConnectorY(), 96, 0, 4, 4, this.connector.type().color() | 0xff000000);
 
-            BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+            BufferRenderer.drawWithShader(bufferBuilder.end());
 
             if (!isOutput)
                 textRenderer.draw(matrices, this.connector.id(), (float) x + 16, (float) (y + 2), 0x404040);

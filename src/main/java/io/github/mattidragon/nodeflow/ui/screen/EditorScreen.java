@@ -25,7 +25,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import org.joml.Matrix4f;
+import net.minecraft.util.math.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -81,15 +81,15 @@ public class EditorScreen extends Screen {
     }
 
     private void addGroup(Graph graph, HashSet<NodeType<?>> miscNodes, NodeGroup group) {
-        groupButtons.add(ButtonWidget.builder(group.name(), button -> {
+        groupButtons.add(new ButtonWidget(0, 0, 100, 20, group.name(), button -> {
             activeGroup = group;
             updateAddButtons();
             updateVisibility();
-        }).dimensions(0, 0, 100, 20).build());
+        }));
 
         var buttons = new ArrayList<ButtonWidget>();
         for (var type : group.nodes()) {
-            buttons.add(ButtonWidget.builder(type.name(), button1 -> {
+            buttons.add(new ButtonWidget(0, 0, 100, 20, type.name(), button1 -> {
                 toggleAddingMode();
                 var node = type.generator().apply(graph);
                 node.guiX = (int) area.modifyX(width / 2.0);
@@ -99,7 +99,7 @@ public class EditorScreen extends Screen {
                 var widget = new NodeWidget(node, this);
                 area.add(widget);
                 syncGraph();
-            }).dimensions(0, 0, 100, 20).build());
+            }));
             miscNodes.remove(type);
         }
         nodeButtons.put(group, buttons);
@@ -114,13 +114,13 @@ public class EditorScreen extends Screen {
             area.add(widget);
         }
 
-        plusButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button -> toggleAddingMode()).dimensions(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20).build());
-        deleteButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button1 -> toggleDeletingMode()).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
-        backButton = addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, button -> {
+        plusButton = addDrawableChild(new ButtonWidget(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20, Text.empty(), button -> toggleAddingMode()));
+        deleteButton = addDrawableChild(new ButtonWidget(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20, Text.empty(), button -> toggleDeletingMode()));
+        backButton = addDrawableChild(new ButtonWidget(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20, ScreenTexts.BACK, button -> {
             activeGroup = null;
             updateAddButtons();
             updateVisibility();
-        }).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
+        }));
 
         addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight(), GRID_OFFSET + 10, height - GRID_OFFSET - 10));
         updateAddButtons();
@@ -388,7 +388,7 @@ public class EditorScreen extends Screen {
         int boxWidth = getBoxWidth();
 
         // DrawableHelper.drawTexture is too slow because it uses one draw call per call. We only need it at the end.
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, texture);
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
@@ -420,7 +420,7 @@ public class EditorScreen extends Screen {
         addTexturedQuad(matrix, GRID_OFFSET + boxWidth, BORDER_OFFSET , 24, 0, 8, 8);
         addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + boxHeight, 24, 24, 8, 8);
 
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferRenderer.drawWithShader(bufferBuilder.end());
     }
 
     public static void addTexturedQuad(Matrix4f matrix, int x1, int y1, int u, int v, int width, int height) {
@@ -519,8 +519,8 @@ public class EditorScreen extends Screen {
             public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
-                    button.setY(y);
-                    button.setX(x + i * 110);
+                    button.y = y;
+                    button.x = x + i * 110;
                     button.render(matrices, mouseX, mouseY, delta);
                 }
             }

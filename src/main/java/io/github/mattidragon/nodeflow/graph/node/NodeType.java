@@ -11,10 +11,10 @@ import io.github.mattidragon.nodeflow.graph.node.builtin.base.BinaryOperationNod
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.ConstantNode;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.UnaryOperationNode;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.minecraft.registry.DefaultedRegistry;
-import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.DefaultedRegistry;
+import net.minecraft.util.registry.Registry;
 
 import java.util.function.Function;
 

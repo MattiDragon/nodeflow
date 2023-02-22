@@ -4,10 +4,10 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.minecraft.registry.DefaultedRegistry;
-import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.DefaultedRegistry;
+import net.minecraft.util.registry.Registry;
 
 public record DataType<T>(int color, boolean splittable) {
     public static final DefaultedRegistry<DataType<?>> REGISTRY = FabricRegistryBuilder.<DataType<?>>createDefaulted(null, NodeFlow.id("data_type"), NodeFlow.id("number")).buildAndRegister();

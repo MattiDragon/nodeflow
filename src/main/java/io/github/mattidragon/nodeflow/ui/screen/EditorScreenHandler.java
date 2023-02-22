@@ -47,7 +47,7 @@ public class EditorScreenHandler extends ScreenHandler {
 
     // Minecraft assumes screen handlers have slots. We don't, so we don't implement shift clicking.
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack transferSlot(PlayerEntity player, int index) {
         return null;
     }
 
