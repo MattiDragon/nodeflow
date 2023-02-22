@@ -20,8 +20,6 @@ dependencies {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/nodeflow.accesswidener")
-
     runs {
         server {
             runDir "serverRun"

@@ -25,7 +25,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Matrix4f;
+import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -81,22 +81,25 @@ public class EditorScreen extends Screen {
     }
 
     private void addGroup(Graph graph, HashSet<NodeType<?>> miscNodes, NodeGroup group) {
-        groupButtons.add(new ButtonWidget(0, 0, 100, 20, group.name(), button -> {
+        groupButtons.add(ButtonWidget.builder(group.name(), button -> {
             activeGroup = group;
             updateAddButtons();
             updateVisibility();
-        }));
+        }).dimensions(0, 0, 100, 20).build());
 
         var buttons = new ArrayList<ButtonWidget>();
         for (var type : group.nodes()) {
-            buttons.add(new ButtonWidget(0, 0, 100, 20, type.name(), button1 -> {
+            buttons.add(ButtonWidget.builder(type.name(), button1 -> {
                 toggleAddingMode();
                 var node = type.generator().apply(graph);
+                node.guiX = (int) area.modifyX(width / 2.0);
+                node.guiY = (int) area.modifyY(height / 2.0);
+
                 graph.addNode(node);
                 var widget = new NodeWidget(node, this);
                 area.add(widget);
                 syncGraph();
-            }));
+            }).dimensions(0, 0, 100, 20).build());
             miscNodes.remove(type);
         }
         nodeButtons.put(group, buttons);
@@ -111,13 +114,13 @@ public class EditorScreen extends Screen {
             area.add(widget);
         }
 
-        plusButton = addDrawableChild(new ButtonWidget(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20, Text.empty(), button -> toggleAddingMode()));
-        deleteButton = addDrawableChild(new ButtonWidget(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20, Text.empty(), button -> toggleDeletingMode()));
-        backButton = addDrawableChild(new ButtonWidget(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20, ScreenTexts.BACK, button -> {
+        plusButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button -> toggleAddingMode()).dimensions(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20).build());
+        deleteButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button1 -> toggleDeletingMode()).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
+        backButton = addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, button -> {
             activeGroup = null;
             updateAddButtons();
             updateVisibility();
-        }));
+        }).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
 
         addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight(), GRID_OFFSET + 10, height - GRID_OFFSET - 10));
         updateAddButtons();
@@ -140,6 +143,7 @@ public class EditorScreen extends Screen {
             entries.add(new AddNodesWidget.Entry(currentButtons));
         }
         addMenu.replaceEntries(entries);
+        addMenu.setScrollAmount(0);
     }
 
     public void syncGraph() {}
@@ -185,7 +189,10 @@ public class EditorScreen extends Screen {
         var row = findConnectorAt(mouseX, mouseY);
         if (row == null) return;
         if (connectingConnector == null) return;
-        if (row == connectingConnector) return;
+        if (row.equals(connectingConnector)) {
+            graph.removeConnections(connectingConnector);
+            return;
+        }
 
         if (connectingConnector.isOutput() == row.isOutput()) {
             if (row.isOutput())
@@ -381,7 +388,7 @@ public class EditorScreen extends Screen {
         int boxWidth = getBoxWidth();
 
         // DrawableHelper.drawTexture is too slow because it uses one draw call per call. We only need it at the end.
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         RenderSystem.setShaderTexture(0, texture);
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
@@ -413,7 +420,7 @@ public class EditorScreen extends Screen {
         addTexturedQuad(matrix, GRID_OFFSET + boxWidth, BORDER_OFFSET , 24, 0, 8, 8);
         addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + boxHeight, 24, 24, 8, 8);
 
-        BufferRenderer.drawWithShader(bufferBuilder.end());
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 
     public static void addTexturedQuad(Matrix4f matrix, int x1, int y1, int u, int v, int width, int height) {
@@ -512,8 +519,8 @@ public class EditorScreen extends Screen {
             public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
-                    button.y = y;
-                    button.x = x + i * 110;
+                    button.setY(y);
+                    button.setX(x + i * 110);
                     button.render(matrices, mouseX, mouseY, delta);
                 }
             }
