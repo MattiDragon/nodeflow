@@ -18,6 +18,11 @@ public class NodeConfigScreen extends Screen {
     }
 
     @Override
+    public boolean shouldPause() {
+        return false;
+    }
+
+    @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);

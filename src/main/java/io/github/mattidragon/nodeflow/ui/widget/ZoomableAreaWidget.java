@@ -5,6 +5,7 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -63,10 +64,14 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         return scale;
     }
 
-    public void addZoom(int amount) {
+    public void zoom(int amount, double x, double y) {
+        var anchorX = modifyX(x);
+        var anchorY = modifyY(y);
         zoom += amount;
         zoom = MathHelper.clamp(zoom, -5, 5);
         scale = Float.NaN;
+        this.viewX = -(anchorX * getScale() - x + this.x + this.width / 2.0);
+        this.viewY = -(anchorY * getScale() - y + this.y + this.height / 2.0);
     }
 
     public double modifyX(double originalX) {
@@ -122,11 +127,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             return false;
         if (super.mouseScrolled(modifyX(mouseX), modifyY(mouseY), amount))
             return true;
-        var anchorX = modifyX(mouseX);
-        var anchorY = modifyY(mouseY);
-        addZoom((int) amount);
-        viewX = -((anchorX * getScale()) - mouseX + x + width / 2.0);
-        viewY = -((anchorY * getScale()) - mouseY + y + height / 2.0);
+        zoom((int) amount, mouseX, mouseY);
 
         return true;
     }
@@ -144,27 +145,15 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             return true;
 
         switch (keyCode) {
-            case GLFW.GLFW_KEY_UP:
-                viewY += 10;
-                break;
-            case GLFW.GLFW_KEY_DOWN:
-                viewY -= 10;
-                break;
-            case GLFW.GLFW_KEY_RIGHT:
-                viewX -= 10;
-                break;
-            case GLFW.GLFW_KEY_LEFT:
-                viewX += 10;
-                break;
-            case GLFW.GLFW_KEY_MINUS:
-            case GLFW.GLFW_KEY_KP_SUBTRACT:
-                addZoom(-1);
-                break;
-            case GLFW.GLFW_KEY_KP_ADD:
-                addZoom(1);
-                break;
-            default:
+            case GLFW.GLFW_KEY_UP -> viewY += 10;
+            case GLFW.GLFW_KEY_DOWN -> viewY -= 10;
+            case GLFW.GLFW_KEY_RIGHT -> viewX -= 10;
+            case GLFW.GLFW_KEY_LEFT -> viewX += 10;
+            case GLFW.GLFW_KEY_MINUS, GLFW.GLFW_KEY_KP_SUBTRACT -> zoom(-1, x + width / 2.0, y + height / 2.0);
+            case GLFW.GLFW_KEY_KP_ADD -> zoom(1, x + width / 2.0, y + height / 2.0);
+            default -> {
                 return false;
+            }
         }
         return true;
     }
@@ -230,5 +219,15 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
     public void setZoom(int zoom) {
         this.zoom = zoom;
+    }
+
+    @Override
+    public void setFocused(@Nullable Element focused) {
+        //noinspection SuspiciousMethodCalls
+        if (children.remove(focused)) { // Move the child to first place when clicked (hacky)
+            //noinspection unchecked
+            children.add(0, (T) focused);
+        }
+        super.setFocused(focused);
     }
 }

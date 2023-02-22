@@ -21,8 +21,12 @@ public class MessageToast implements Toast {
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         manager.drawTexture(matrices, 0, 0, 0, 0, this.getWidth(), this.getHeight());
         var text = manager.getClient().textRenderer.wrapLines(title, 140);
-        for (var j = 0; j < text.size(); ++j) {
-            manager.getClient().textRenderer.draw(matrices, text.get(j), 7, (float)(7 + j * 12), 0xffffffff);
+        if (text.size() == 1) {
+            manager.getClient().textRenderer.draw(matrices, text.get(0), 7, 13, 0xffffffff);
+        } else {
+            for (var j = 0; j < text.size(); ++j) {
+                manager.getClient().textRenderer.draw(matrices, text.get(j), 7, (float) (7 + j * 12), 0xffffffff);
+            }
         }
         return startTime >= 2500L ? Visibility.HIDE : Visibility.SHOW;
     }

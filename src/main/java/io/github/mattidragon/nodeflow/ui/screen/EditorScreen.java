@@ -92,6 +92,9 @@ public class EditorScreen extends Screen {
             buttons.add(new ButtonWidget(0, 0, 100, 20, type.name(), button1 -> {
                 toggleAddingMode();
                 var node = type.generator().apply(graph);
+                node.guiX = (int) area.modifyX(width / 2.0);
+                node.guiY = (int) area.modifyY(height / 2.0);
+
                 graph.addNode(node);
                 var widget = new NodeWidget(node, this);
                 area.add(widget);
@@ -140,6 +143,7 @@ public class EditorScreen extends Screen {
             entries.add(new AddNodesWidget.Entry(currentButtons));
         }
         addMenu.replaceEntries(entries);
+        addMenu.setScrollAmount(0);
     }
 
     public void syncGraph() {}
@@ -185,7 +189,10 @@ public class EditorScreen extends Screen {
         var row = findConnectorAt(mouseX, mouseY);
         if (row == null) return;
         if (connectingConnector == null) return;
-        if (row == connectingConnector) return;
+        if (row.equals(connectingConnector)) {
+            graph.removeConnections(connectingConnector);
+            return;
+        }
 
         if (connectingConnector.isOutput() == row.isOutput()) {
             if (row.isOutput())

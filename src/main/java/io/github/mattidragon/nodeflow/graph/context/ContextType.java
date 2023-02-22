@@ -1,10 +1,9 @@
 package io.github.mattidragon.nodeflow.graph.context;
 
-import com.mojang.serialization.Lifecycle;
 import io.github.mattidragon.nodeflow.NodeFlow;
-import io.github.mattidragon.nodeflow.graph.data.DataType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -14,12 +13,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 
 public record ContextType<T>(Class<T> type, ContextType<?>[] parents) {
-    public static final RegistryKey<Registry<ContextType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("context_type"));
-    public static final DefaultedRegistry<ContextType<?>> REGISTRY = Registry.register(Registry.ROOT, NodeFlow.id("context_type"), new DefaultedRegistry<>("nodeflow:dummy", KEY, Lifecycle.stable(), null));
+    public static final DefaultedRegistry<ContextType<?>> REGISTRY = FabricRegistryBuilder.<ContextType<?>>createDefaulted(null, NodeFlow.id("context_type"), NodeFlow.id("dummy")).buildAndRegister();
 
     public static final ContextType<MinecraftServer> SERVER = register(new ContextType<>(MinecraftServer.class), NodeFlow.id("server"));
     public static final ContextType<World> WORLD = register(new ContextType<>(World.class), NodeFlow.id("world"));
@@ -64,10 +61,6 @@ public record ContextType<T>(Class<T> type, ContextType<?>[] parents) {
     public static <T> ContextType<T> register(ContextType<T> type, Identifier id) {
         Registry.register(REGISTRY, id, type);
         return type;
-    }
-
-    private static ContextType<?> getDefault(Registry<ContextType<?>> registry) {
-        return DUMMY;
     }
 
     @Override

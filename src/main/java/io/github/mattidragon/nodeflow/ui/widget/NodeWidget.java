@@ -37,6 +37,11 @@ public class NodeWidget extends ClickableWidget {
         this.parent = parent;
     }
 
+    @Override
+    public void appendNarrations(NarrationMessageBuilder builder) {
+        //TODO: implement
+    }
+
     private static int calcWidth(Node node, TextRenderer renderer) {
         var fieldMax = Stream.concat(Arrays.stream(node.getInputs()), Arrays.stream(node.getOutputs()))
                 .map(Connector::id)
@@ -45,11 +50,6 @@ public class NodeWidget extends ClickableWidget {
                 .max()
                 .orElse(0);
         return Math.max(fieldMax, renderer.getWidth(node.getName()) + 32);
-    }
-
-    @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
-        //TODO: implement
     }
 
     public Segment[] calculateSegments() {
@@ -98,7 +98,6 @@ public class NodeWidget extends ClickableWidget {
         node.guiY = y + height / 2;
     }
 
-    @Override
     public void renderTooltip(MatrixStack matrices, int mouseX, int mouseY) {
         if (mouseX >= x + width - 20 && mouseX <= x + width - 4 && mouseY >= y + 4 && mouseY <= y + 20) {
             var tooltip = new ArrayList<Text>();
@@ -134,7 +133,7 @@ public class NodeWidget extends ClickableWidget {
             addQuad(matrix, x + 8 + i * 16, y, 32 + 8, 0, 16, 24);
         }
         addQuad(matrix, x + 8 + columnCount * 16, y, 32 + 8, 0, width - (16 + columnCount * 16), 24);
-        
+
         addQuad(matrix, x, y, 32, 0, 8, 24);
         addQuad(matrix, x + width - 8, y, 32 + 24, 0, 8, 24);
 

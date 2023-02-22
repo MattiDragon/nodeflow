@@ -1,18 +1,16 @@
 package io.github.mattidragon.nodeflow.graph.data;
 
-import com.mojang.serialization.Lifecycle;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.node.Node;
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 
 public record DataType<T>(int color, boolean splittable) {
-    public static final RegistryKey<Registry<DataType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("data_type"));
-    public static final DefaultedRegistry<DataType<?>> REGISTRY = Registry.register(Registry.ROOT, NodeFlow.id("data_type"), new DefaultedRegistry<>("nodeflow:number", KEY, Lifecycle.stable(), null));
+    public static final DefaultedRegistry<DataType<?>> REGISTRY = FabricRegistryBuilder.<DataType<?>>createDefaulted(null, NodeFlow.id("data_type"), NodeFlow.id("number")).buildAndRegister();
 
     public static final DataType<Double> NUMBER = register(new DataType<>(0x5555ff, true), NodeFlow.id("number"));
     public static final DataType<Boolean> BOOLEAN = register(new DataType<>(0xff5555, true), NodeFlow.id("boolean"));

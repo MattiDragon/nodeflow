@@ -1,22 +1,25 @@
 package io.github.mattidragon.nodeflow.graph.node;
 
-import com.mojang.serialization.Lifecycle;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
-import io.github.mattidragon.nodeflow.graph.node.builtin.*;
+import io.github.mattidragon.nodeflow.graph.node.builtin.NumberNode;
+import io.github.mattidragon.nodeflow.graph.node.builtin.SendNumberNode;
+import io.github.mattidragon.nodeflow.graph.node.builtin.SwitchNode;
+import io.github.mattidragon.nodeflow.graph.node.builtin.TimeNode;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.BinaryOperationNode;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.ConstantNode;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.UnaryOperationNode;
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.*;
+import net.minecraft.util.registry.DefaultedRegistry;
+import net.minecraft.util.registry.Registry;
 
 import java.util.function.Function;
 
 public record NodeType<T extends Node>(Function<Graph, T> generator) {
-    public static final RegistryKey<Registry<NodeType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("node_type"));
-    public static final DefaultedRegistry<NodeType<?>> REGISTRY = Registry.register(Registry.ROOT, NodeFlow.id("node_type"), new DefaultedRegistry<>("nodeflow:time", KEY, Lifecycle.stable(), null));
+    public static final DefaultedRegistry<NodeType<?>> REGISTRY = FabricRegistryBuilder.<NodeType<?>>createDefaulted(null, NodeFlow.id("node_type"), NodeFlow.id("time")).buildAndRegister();
 
     public static final NodeType<SendNumberNode> BROADCAST = register(new NodeType<>(SendNumberNode::new), NodeFlow.id("broadcast"));
     public static final NodeType<TimeNode> TIME = register(new NodeType<>(TimeNode::new), NodeFlow.id("time"));
