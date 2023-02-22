@@ -1,5 +1,6 @@
 package io.github.mattidragon.nodeflow.ui.widget;
 
+import com.google.common.collect.Lists;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.util.math.MatrixStack;
@@ -167,7 +168,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         var scale = getScale();
         matrices.scale(scale, scale, scale);
 
-        for (var child : children) {
+        for (var child : Lists.reverse(children)) {
             child.render(matrices, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
         }
 
@@ -225,7 +226,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         //noinspection SuspiciousMethodCalls
         if (children.remove(focused)) { // Move the child to first place when clicked (hacky)
             //noinspection unchecked
-            children.add((T) focused);
+            children.add(0, (T) focused);
         }
         super.setFocused(focused);
     }
