@@ -160,14 +160,14 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
-            for (var node : Lists.reverse(this.children())) {
+            for (var node : this.children()) {
                 if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
                     var buttons = new ArrayList<ButtonWidget>();
-                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()));
-                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()));
-                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 10, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
-                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 30, 100, 10, Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode()));
-                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 40, 100, 10, Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode()));
+                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY, 100, 20, ScreenTexts.CANCEL, __ -> closeMenu()));
+                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 20, Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()));
+                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 40, 100, 20, Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
+                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 60, 100, 20, Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode()));
+                    buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 80, 100, 20, Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode()));
                     if (node.node.hasConfig())
                         buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 90, 100, 10, Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()));
                     contextButtons = buttons.toArray(new ButtonWidget[0]);
@@ -176,8 +176,8 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 }
             }
             var buttons = new ArrayList<ButtonWidget>();
-            buttons.add(new ButtonWidget((int) mouseX, (int) mouseY, 100, 10, ScreenTexts.CANCEL, __ -> closeMenu()));
-            buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 10, 100, 10, Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(mouseX, mouseY)));
+            buttons.add(new ButtonWidget((int) mouseX, (int) mouseY, 100, 20, ScreenTexts.CANCEL, __ -> closeMenu()));
+            buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 20, 100, 20, Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(mouseX, mouseY)));
             contextButtons = buttons.toArray(new ButtonWidget[0]);
             return true;
         }
