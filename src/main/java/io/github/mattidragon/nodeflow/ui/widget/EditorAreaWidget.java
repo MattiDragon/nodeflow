@@ -169,7 +169,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                     buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 36, 100, 12, Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode()));
                     buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 48, 100, 12, Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode()));
                     if (node.node.hasConfig())
-                        buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 90, 100, 10, Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()));
+                        buttons.add(new ButtonWidget((int) mouseX, (int) mouseY + 60, 100, 12, Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()));
                     contextButtons = buttons.toArray(new ButtonWidget[0]);
                     clickedNode = node;
                     return true;
