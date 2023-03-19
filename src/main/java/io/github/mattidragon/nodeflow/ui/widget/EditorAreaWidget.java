@@ -3,6 +3,7 @@ package io.github.mattidragon.nodeflow.ui.widget;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mattidragon.nodeflow.NodeFlow;
+import io.github.mattidragon.nodeflow.graph.Connection;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import net.minecraft.client.MinecraftClient;
@@ -249,12 +250,12 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             renderConnectorLine(matrices, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color() | 0xaa000000);
         }
 
-        parent.graph.getConnections().forEach(connection -> {
+        for (Connection connection : parent.graph.getConnections()) {
             var input = parent.findSegment(Objects.requireNonNull(connection.getTargetConnector(parent.graph)));
             var output = parent.findSegment(Objects.requireNonNull(connection.getSourceConnector(parent.graph)));
 
             renderConnectorLine(matrices, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color() | 0xaa000000);
-        });
+        }
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         RenderSystem.disableBlend();

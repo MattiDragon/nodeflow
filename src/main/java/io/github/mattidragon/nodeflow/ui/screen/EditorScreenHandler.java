@@ -56,9 +56,11 @@ public class EditorScreenHandler extends ScreenHandler {
         return this.context.get((world, pos) -> player.squaredDistanceTo((double)pos.getX() + 0.5, (double)pos.getY() + 0.5, (double)pos.getZ() + 0.5) <= 64.0, true);
     }
 
+
+
     @Override
-    public void close(PlayerEntity player) {
-        super.close(player);
+    public void onClosed(PlayerEntity player) {
+        super.onClosed(player);
         context.run((world, pos) -> {
             var blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof GraphProvider provider) {

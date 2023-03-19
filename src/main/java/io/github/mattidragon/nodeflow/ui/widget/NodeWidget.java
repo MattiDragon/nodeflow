@@ -30,7 +30,8 @@ public class NodeWidget extends ClickableWidget {
 
     public NodeWidget(Node node, EditorScreen parent) {
         super(node.guiX, node.guiY, calcWidth(node, Screens.getTextRenderer(parent)), 24 + 8 + (node.getInputs().length + node.getOutputs().length) * ROW_HEIGHT, node.getName());
-        setPos(getX() - width / 2, getY() - height / 2);
+        setX(getX() - width / 2);
+        setY(getY() - height / 2);
 
         this.node = node;
         this.parent = parent;
@@ -242,6 +243,7 @@ public class NodeWidget extends ClickableWidget {
             addQuad(matrix, getConnectorX(), getConnectorY(), 96, 0, 4, 4, this.connector.type().color() | 0xff000000);
 
             BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+            RenderSystem.setShaderColor(1, 1, 1, 1);
 
             if (!isOutput)
                 textRenderer.draw(matrices, this.connector.id(), (float) x + 16, (float) (y + 2), 0x404040);
