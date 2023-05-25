@@ -22,10 +22,11 @@
     ]
   },
   "mixins": [
+    "nodeflow.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.17",
     "fabric-api": ">=0.76.0",
-    "minecraft": "1.19.4"
+    "minecraft": "~1.20-beta.4"
   }
 }

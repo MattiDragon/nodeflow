@@ -5,7 +5,6 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import io.github.mattidragon.nodeflow.graph.node.builtin.SwitchNode;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.ui.screen.NodeConfigScreen;
 import net.fabricmc.api.EnvType;

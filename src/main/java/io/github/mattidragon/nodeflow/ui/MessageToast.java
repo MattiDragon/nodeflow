@@ -1,10 +1,8 @@
 package io.github.mattidragon.nodeflow.ui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.toast.Toast;
 import net.minecraft.client.toast.ToastManager;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class MessageToast implements Toast {
@@ -15,17 +13,14 @@ public class MessageToast implements Toast {
     }
 
     @Override
-    public Visibility draw(MatrixStack matrices, ToastManager manager, long startTime) {
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        manager.drawTexture(matrices, 0, 0, 0, 0, this.getWidth(), this.getHeight());
+    public Visibility draw(DrawContext context, ToastManager manager, long startTime) {
+        context.drawTexture(TEXTURE, 0, 0, 0, 0, this.getWidth(), this.getHeight());
         var text = manager.getClient().textRenderer.wrapLines(title, 140);
         if (text.size() == 1) {
-            manager.getClient().textRenderer.draw(matrices, text.get(0), 7, 13, 0xffffffff);
+            context.drawText(manager.getClient().textRenderer, text.get(0), 7, 13, 0xffffffff, false);
         } else {
-            for (var j = 0; j < text.size(); ++j) {
-                manager.getClient().textRenderer.draw(matrices, text.get(j), 7, (float) (7 + j * 12), 0xffffffff);
+            for (var i = 0; i < text.size(); ++i) {
+                context.drawText(manager.getClient().textRenderer, text.get(i), 7, (7 + i * 12), 0xffffffff, false);
             }
         }
         return startTime >= 2500L ? Visibility.HIDE : Visibility.SHOW;

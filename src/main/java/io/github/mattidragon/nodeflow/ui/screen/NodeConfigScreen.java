@@ -1,8 +1,8 @@
 package io.github.mattidragon.nodeflow.ui.screen;
 
 import io.github.mattidragon.nodeflow.graph.node.Node;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -23,9 +23,9 @@ public class NodeConfigScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.renderBackground(matrices);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.renderBackground(context);
+        super.render(context, mouseX, mouseY, delta);
 
         var isGray = new MutableBoolean(false);
 
@@ -43,20 +43,20 @@ public class NodeConfigScreen extends Screen {
         var x = width - 200;
         var y = 29;
 
-        fill(matrices, x - 2, 18, width - 18, height - 18, 0x33ffffff);
+        context.fill(x - 2, 18, width - 18, height - 18, 0x33ffffff);
 
         if (texts.size() > 0)
-            textRenderer.draw(matrices, Text.translatable("node.nodeflow.generic.config.errors"), x, 20, 0xff5555);
+            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.errors"), x, 20, 0xff5555, false);
         else
-            textRenderer.draw(matrices, Text.translatable("node.nodeflow.generic.config.no_errors"), x, 20, 0x55ff55);
+            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.no_errors"), x, 20, 0x55ff55, false);
 
         for (var text : texts) {
-            textRenderer.draw(matrices, text, x, y, 0xffffff);
+            context.drawText(textRenderer, text, x, y, 0xffffff, false);
             y += 9;
         }
 
         var text = Text.translatable("node.nodeflow.generic.config.title", owner.getName());
-        textRenderer.draw(matrices, text, (width - 200) / 2f - textRenderer.getWidth(text.asOrderedText()) / 2f, 10, 0xffffff);
+        context.drawText(textRenderer, text, (width - 200 - textRenderer.getWidth(text.asOrderedText())) / 2, 10, 0xffffff, false);
     }
 
     @Override

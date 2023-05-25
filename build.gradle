@@ -9,6 +9,7 @@ group = project.maven_group
 archivesBaseName = project.archives_base_name
 
 repositories {
+    maven { url = "https://jitpack.io" }
 }
 
 dependencies {
@@ -17,6 +18,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:$loader_version"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_version"
+    include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:$mixin_extras_version")))
 }
 
 loom {

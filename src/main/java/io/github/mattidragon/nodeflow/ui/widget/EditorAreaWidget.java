@@ -7,6 +7,12 @@ import io.github.mattidragon.nodeflow.graph.Connection;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.AbstractParentElement;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.navigation.GuiNavigation;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -17,6 +23,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.ByteArrayInputStream;
@@ -28,36 +35,30 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     private static final String CLIPBOARD_PREFIX = "nodeflow-node-v1:";
     private final EditorScreen parent;
 
-    private NodeWidget clickedNode;
-    private ButtonWidget[] contextButtons = new ButtonWidget[0];
+    private final ContextMenuWidget contextMenu = new ContextMenuWidget();
 
     public EditorAreaWidget(int x, int y, int width, int height, EditorScreen parent) {
         super(x, y, width, height);
         this.parent = parent;
-        closeMenu();
-    }
-
-    private void closeMenu() {
-        contextButtons = new ButtonWidget[0];
-        clickedNode = null;
+        contextMenu.hide();
     }
 
     private void deleteNode() {
-        if (clickedNode == null) {
+        if (contextMenu.node == null) {
             NodeFlow.LOGGER.warn("Clicked delete key without clicking node");
             return;
         }
-        parent.removeNode(clickedNode);
-        closeMenu();
+        parent.removeNode(contextMenu.node);
+        contextMenu.hide();
     }
 
     private void duplicateNode() {
-        if (clickedNode == null) {
+        if (contextMenu.node == null) {
             NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
             return;
         }
         var nbt = new NbtCompound();
-        var oldNode = clickedNode.node;
+        var oldNode = contextMenu.node.node;
         oldNode.writeNbt(nbt);
 
         var newNode = oldNode.type.generator().apply(parent.graph);
@@ -69,16 +70,16 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         parent.graph.addNode(newNode);
         add(new NodeWidget(newNode, parent));
         parent.syncGraph();
-        closeMenu();
+        contextMenu.hide();
     }
 
     private void copyNode() {
-        if (clickedNode == null) {
+        if (contextMenu.node == null) {
             NodeFlow.LOGGER.warn("Clicked copy key without clicking node");
             return;
         }
         var nbt = new NbtCompound();
-        clickedNode.node.writeNbt(nbt);
+        contextMenu.node.node.writeNbt(nbt);
         nbt.remove("guiX");
         nbt.remove("guiY");
         nbt.remove("id");
@@ -93,16 +94,16 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
         MinecraftClient.getInstance().keyboard.setClipboard(CLIPBOARD_PREFIX + bytes);
 
-        closeMenu();
+        contextMenu.hide();
     }
 
     private void cutNode() {
-        if (clickedNode == null) {
+        if (contextMenu.node == null) {
             NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
             return;
         }
         var nbt = new NbtCompound();
-        clickedNode.node.writeNbt(nbt);
+        contextMenu.node.node.writeNbt(nbt);
         nbt.remove("guiX");
         nbt.remove("guiY");
         nbt.remove("id");
@@ -116,8 +117,8 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         }
         MinecraftClient.getInstance().keyboard.setClipboard(CLIPBOARD_PREFIX + bytes);
 
-        parent.removeNode(clickedNode);
-        closeMenu();
+        parent.removeNode(contextMenu.node);
+        contextMenu.hide();
     }
 
     private void pasteNode(double mouseX, double mouseY) {
@@ -146,16 +147,16 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         parent.graph.addNode(node);
         add(new NodeWidget(node, parent));
         parent.syncGraph();
-        closeMenu();
+        contextMenu.hide();
     }
 
     private void configureNode() {
-        if (clickedNode == null) {
+        if (contextMenu.node == null) {
             NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
             return;
         }
-        MinecraftClient.getInstance().setScreen(clickedNode.node.createConfigScreen(parent));
-        closeMenu();
+        MinecraftClient.getInstance().setScreen(contextMenu.node.node.createConfigScreen(parent));
+        contextMenu.hide();
     }
 
     @Override
@@ -163,39 +164,26 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
             for (var node : Lists.reverse(this.children())) {
                 if (node.clicked(modifyX(mouseX), modifyY(mouseY))) {
-                    var buttons = new ArrayList<ButtonWidget.Builder>();
-                    buttons.add(ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()));
-                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode()));
-                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode()));
-                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode()));
-                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode()));
-                    if (node.node.hasConfig())
-                        buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode()));
-                    setContextButtons(mouseX, mouseY, buttons);
-                    clickedNode = node;
+                    setContextMenu((int) mouseX, (int) mouseY, node);
                     return true;
                 }
             }
-            var buttons = new ArrayList<ButtonWidget.Builder>();
-            buttons.add(ButtonWidget.builder(ScreenTexts.CANCEL, __ -> closeMenu()));
-            buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(mouseX, mouseY)));
-
-            setContextButtons(mouseX, mouseY, buttons);
-            return true;
-        }
-        if (contextButtons.length != 0) {
-            var result = false;
-            for (var contextButton : contextButtons) {
-                result = contextButton.mouseClicked(mouseX, mouseY, button);
-                if (result)
-                    break;
-            }
-            if (!result)
-                closeMenu();
+            setContextMenu((int) mouseX, (int) mouseY, null);
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return contextMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /**
+     * Shows the context menu
+     * @param x The x coordinate for the position of the menu
+     * @param y The y coordinate for the position of the menu
+     * @param node An optional node that the menu opens for. Makes node specific actions available
+     */
+    public void setContextMenu(int x, int y, @Nullable NodeWidget node) {
+        contextMenu.show(x, y, node);
+        setFocused(contextMenu);
     }
 
     @Override
@@ -208,20 +196,18 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void setContextButtons(double mouseX, double mouseY, List<ButtonWidget.Builder> builders) {
-        var buttons = new ButtonWidget[builders.size()];
-        for (int i = 0; i < builders.size(); i++) {
-            buttons[i] = builders.get(i).dimensions((int) mouseX, (int) (mouseY + 12 * i), 100, 12).build();
+    @Override
+    public void setFocused(boolean focused) {
+        super.setFocused(focused);
+        if (this.getFocused() != null) {
+            this.getFocused().setFocused(focused);
         }
-        contextButtons = buttons;
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
-        for (var contextButton : contextButtons) {
-            contextButton.render(matrices, mouseX, mouseY, delta);
-        }
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        contextMenu.render(context, mouseX, mouseY, delta);
     }
 
     @Override
@@ -302,6 +288,84 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1 + 4, 0).color(color).next();
             bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1, 0).color(color).next();
             bufferBuilder.vertex(matrix, x1, y1, 0).color(color).next();
+        }
+    }
+
+    public class ContextMenuWidget extends AbstractParentElement implements Drawable {
+        private NodeWidget node;
+        private final List<ButtonWidget> buttons = new ArrayList<>();
+
+        public void show(int x, int y, @Nullable NodeWidget node) {
+            hide();
+
+            buttons.add(ButtonWidget.builder(ScreenTexts.CANCEL, __ -> contextMenu.hide()).size(100, 12).build());
+            if (node == null) {
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(x, y))
+                        .size(100, 12)
+                        .build());
+            } else {
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode())
+                        .size(100, 12)
+                        .build());
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> deleteNode())
+                        .size(100, 12)
+                        .build());
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode())
+                        .size(100, 12)
+                        .build());
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode())
+                        .size(100, 12)
+                        .build());
+                if (node.node.hasConfig()) {
+                    buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> configureNode())
+                            .size(100, 12)
+                            .build());
+                }
+            }
+            this.node = node;
+
+            var currentY = y;
+            for (var button : buttons) {
+                button.setX(x);
+                button.setY(currentY);
+                currentY += button.getHeight();
+            }
+        }
+
+        public void hide() {
+            buttons.clear();
+        }
+
+        @Override
+        public List<? extends Element> children() {
+            return buttons;
+        }
+
+        @Override
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            for (var button : buttons) {
+                button.render(context, mouseX, mouseY, delta);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (buttons.size() == 0) return false;
+
+            if (!super.mouseClicked(mouseX, mouseY, button)) {
+                // Hide if clicked outside
+                hide();
+            }
+            // Either one of the children consumed the click or we close
+            return true;
+        }
+
+        @Nullable
+        @Override
+        public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+            var path = super.getNavigationPath(navigation);
+            if (path == null) hide();
+            return path;
         }
     }
 }

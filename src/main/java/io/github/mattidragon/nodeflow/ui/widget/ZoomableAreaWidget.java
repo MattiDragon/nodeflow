@@ -90,6 +90,22 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         return originalY / getScale();
     }
 
+    public double reverseModifyX(double originalX) {
+        return reverseModifyDeltaX(originalX) + x + viewX + width / 2.0;
+    }
+
+    public double reverseModifyY(double originalY) {
+        return reverseModifyDeltaY(originalY) + y + viewY + height / 2.0;
+    }
+
+    public double reverseModifyDeltaX(double originalX) {
+        return originalX * getScale();
+    }
+
+    public double reverseModifyDeltaY(double originalY) {
+        return originalY * getScale();
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isMouseOver(mouseX, mouseY) || !active || !visible) return false;
@@ -159,9 +175,10 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!visible) return;
-        enableScissor(x, y, x + width, y + height);
+        var matrices = context.getMatrices();
+        context.enableScissor(x, y, x + width, y + height);
         matrices.push();
         matrices.translate(x, y, 0);
         matrices.translate(viewX + width / 2.0, viewY + height / 2.0, 0);
@@ -169,13 +186,13 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         matrices.scale(scale, scale, scale);
 
         for (var child : Lists.reverse(children)) {
-            child.render(matrices, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
+            child.render(context, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
         }
 
         renderExtras(matrices, mouseX, mouseY, delta);
 
         matrices.pop();
-        disableScissor();
+        context.disableScissor();
     }
 
     protected void renderExtras(MatrixStack matrices, int mouseX, int mouseY, float delta) {}

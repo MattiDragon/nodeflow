@@ -11,23 +11,25 @@ import io.github.mattidragon.nodeflow.ui.MessageToast;
 import io.github.mattidragon.nodeflow.ui.widget.EditorAreaWidget;
 import io.github.mattidragon.nodeflow.ui.widget.NodeWidget;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.navigation.GuiNavigation;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class EditorScreen extends Screen {
@@ -348,17 +350,18 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(MatrixStack matrices) {
-        super.renderBackground(matrices);
-        renderArea(matrices);
+    public void renderBackground(DrawContext context) {
+        super.renderBackground(context);
+        renderArea(context);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        renderBackground(context);
+        for (var node : area.children())
+            node.updateTooltip();
 
-        renderTooltips(matrices, mouseX, mouseY);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
@@ -369,19 +372,7 @@ public class EditorScreen extends Screen {
         return area.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void renderTooltips(MatrixStack matrices, int mouseX, int mouseY) {
-        matrices.push();
-        matrices.translate(area.getViewX() + width / 2.0, area.getViewY() + height / 2.0, 0);
-        var scale = area.getScale();
-        matrices.scale(scale, scale, scale);
-
-        for (var node : area.children())
-            node.renderTooltip(matrices, (int) area.modifyX(mouseX), (int) area.modifyY(mouseY));
-
-        matrices.pop();
-    }
-
-    private void renderArea(MatrixStack matrices) {
+    private void renderArea(DrawContext context) {
         var rows = (this.height - GRID_OFFSET * 2) / TILE_SIZE;
         var columns = (this.width - GRID_OFFSET * 2) / TILE_SIZE;
         int boxHeight = getBoxHeight();
@@ -393,7 +384,7 @@ public class EditorScreen extends Screen {
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
-        var matrix = matrices.peek().getPositionMatrix();
+        var matrix = context.getMatrices().peek().getPositionMatrix();
 
         // Draws the main grid
         for (int x = 0; x < columns; x++) {
@@ -443,6 +434,10 @@ public class EditorScreen extends Screen {
         return isDeletingNode;
     }
 
+    public EditorAreaWidget getArea() {
+        return area;
+    }
+
     private static class AddNodesWidget extends ElementListWidget<AddNodesWidget.Entry> {
         public boolean active = true;
 
@@ -485,16 +480,24 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             if (!active) return;
-            super.render(matrices, mouseX, mouseY, delta);
+            super.render(context, mouseX, mouseY, delta);
         }
 
         @Override
-        protected void renderList(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            enableScissor(0, top, width + GRID_OFFSET, bottom);
-            super.renderList(matrices, mouseX, mouseY, delta);
-            disableScissor();
+        protected void renderList(DrawContext context, int mouseX, int mouseY, float delta) {
+            context.enableScissor(0, top, width + GRID_OFFSET, bottom);
+            super.renderList(context, mouseX, mouseY, delta);
+            context.disableScissor();
+        }
+
+        @Nullable
+        @Override
+        public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+            if (!active) return null;
+
+            return super.getNavigationPath(navigation);
         }
 
         private static class Entry extends ElementListWidget.Entry<Entry> {
@@ -516,12 +519,12 @@ public class EditorScreen extends Screen {
             }
 
             @Override
-            public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
+            public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
                     button.setY(y);
                     button.setX(x + i * 110);
-                    button.render(matrices, mouseX, mouseY, delta);
+                    button.render(context, mouseX, mouseY, delta);
                 }
             }
         }

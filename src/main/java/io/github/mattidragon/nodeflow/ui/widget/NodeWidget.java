@@ -7,12 +7,14 @@ import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.input.KeyCodes;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
 import org.joml.Matrix4f;
 
@@ -35,6 +37,8 @@ public class NodeWidget extends ClickableWidget {
 
         this.node = node;
         this.parent = parent;
+
+        updateTooltip();
     }
 
     @Override
@@ -62,6 +66,20 @@ public class NodeWidget extends ClickableWidget {
             segments[i++] = new Segment(getX(), getY() + 12 + i * ROW_HEIGHT, true, output);
 
         return segments;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Stolen from PressableWidget and tweaked
+        if (!this.active || !this.visible) return false;
+        if (KeyCodes.isToggle(keyCode)) {
+            this.playDownSound(MinecraftClient.getInstance().getSoundManager());
+            var area = parent.getArea();
+            area.setContextMenu((int) area.reverseModifyX(getX()), (int) area.reverseModifyY(getY()), this);
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -98,29 +116,27 @@ public class NodeWidget extends ClickableWidget {
         node.guiY = getY() + height / 2;
     }
 
-    public void renderTooltip(MatrixStack matrices, int mouseX, int mouseY) {
-        if (mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20) {
-            var tooltip = new ArrayList<Text>();
-            var hasError = !node.validate().isEmpty() || !node.isFullyConnected();
+    public void updateTooltip() {
+        var tooltip = new ArrayList<Text>();
+        var hasError = !node.validate().isEmpty() || !node.isFullyConnected();
 
-            if (node.hasConfig())
-                tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip").formatted(Formatting.WHITE));
-            if (hasError)
-                tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip.errors").formatted(Formatting.RED));
+        if (node.hasConfig())
+            tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip").formatted(Formatting.WHITE));
+        if (hasError)
+            tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip.errors").formatted(Formatting.RED));
 
-            if (!node.validate().isEmpty())
-                tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.invalid_config").formatted(Formatting.RED)));
-            if (!node.isFullyConnected())
-                tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.not_connected").formatted(Formatting.RED)));
+        if (!node.validate().isEmpty())
+            tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.invalid_config").formatted(Formatting.RED)));
+        if (!node.isFullyConnected())
+            tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.not_connected").formatted(Formatting.RED)));
 
-            parent.renderTooltip(matrices, tooltip, mouseX, mouseY);
-        }
+        setTooltip(Tooltip.of(Texts.join(tooltip, Text.literal("\n"))));
     }
 
     @Override
-    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
         var textRenderer = Screens.getTextRenderer(parent);
-        var matrix = matrices.peek().getPositionMatrix();
+        var matrix = context.getMatrices().peek().getPositionMatrix();
         var segments = calculateSegments();
 
         RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
@@ -128,14 +144,17 @@ public class NodeWidget extends ClickableWidget {
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
 
-        int columnCount = width / 16 - 1;
+        var uvOffset = this.isFocused() ? 64 : 32;
+        var columnCount = width / 16 - 1;
+        // Top bar
         for (int i = 0; i < columnCount; i++) {
-            addQuad(matrix, getX() + 8 + i * 16, getY(), 32 + 8, 0, 16, 24);
+            addQuad(matrix, getX() + 8 + i * 16, getY(), uvOffset + 8, 0, 16, 24);
         }
-        addQuad(matrix, getX() + 8 + columnCount * 16, getY(), 32 + 8, 0, width - (16 + columnCount * 16), 24);
+        addQuad(matrix, getX() + 8 + columnCount * 16, getY(), uvOffset + 8, 0, width - (16 + columnCount * 16), 24);
 
-        addQuad(matrix, getX(), getY(), 32, 0, 8, 24);
-        addQuad(matrix, getX() + width - 8, getY(), 32 + 24, 0, 8, 24);
+        // Top corners
+        addQuad(matrix, getX(), getY(), uvOffset, 0, 8, 24);
+        addQuad(matrix, getX() + width - 8, getY(), uvOffset + 24, 0, 8, 24);
 
         var status = 0xffffffff;
         if (!node.isFullyConnected())
@@ -145,38 +164,44 @@ public class NodeWidget extends ClickableWidget {
         if (node.hasConfig() && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20)
             status = 0xff9999ff;
 
-        if (!node.isFullyConnected() || !node.validate().isEmpty())
+        // Status indicator / config button
+        if (!node.isFullyConnected() || !node.validate().isEmpty()) {
             addQuad(matrix, getX() + width - 20, getY() + 4, 112, 4, 16, 16, status);
-        else if (node.hasConfig())
+        } else if (node.hasConfig()) {
             addQuad(matrix, getX() + width - 20, getY() + 4, 96, 4, 16, 16, status);
+        }
 
+        // Center rows
         for (var segment : segments) {
+            // Fill
             for (int i = 0; i < columnCount; i++) {
-                addQuad(matrix, getX() + 8 + i * 16, segment.y, 32 + 8, 8, 16, 12);
+                addQuad(matrix, getX() + 8 + i * 16, segment.y, uvOffset + 8, 8, 16, 12);
             }
-            addQuad(matrix, getX() + 8 + columnCount * 16, segment.y, 32 + 8, 8, width - (16 + columnCount * 16), 12);
+            addQuad(matrix, getX() + 8 + columnCount * 16, segment.y, uvOffset + 8, 8, width - (16 + columnCount * 16), 12);
 
-            addQuad(matrix, getX(), segment.y, 32, 8, 8, 12);
-            addQuad(matrix, getX() + width - 8, segment.y, 32 + 24, 8, 8, 12);
+            // Sides
+            addQuad(matrix, getX(), segment.y, uvOffset, 8, 8, 12);
+            addQuad(matrix, getX() + width - 8, segment.y, uvOffset + 24, 8, 8, 12);
         }
 
+        // Bottom bar
         for (int i = 0; i < columnCount; i++) {
-            addQuad(matrix, getX() + 8 + i * 16, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, 16, 8);
+            addQuad(matrix, getX() + 8 + i * 16, getY() + 24 + segments.length * ROW_HEIGHT, uvOffset + 8, 24, 16, 8);
         }
-        addQuad(matrix, getX() + 8 + columnCount * 16, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 8, 24, width - (16 + columnCount * 16), 8);
+        addQuad(matrix, getX() + 8 + columnCount * 16, getY() + 24 + segments.length * ROW_HEIGHT, uvOffset + 8, 24, width - (16 + columnCount * 16), 8);
 
-        addQuad(matrix, getX(), getY() + 24 + segments.length * ROW_HEIGHT, 32, 24, 8, 8);
-        addQuad(matrix, getX() + width - 8, getY() + 24 + segments.length * ROW_HEIGHT, 32 + 24, 24, 8, 8);
+        // Bottom corners
+        addQuad(matrix, getX(), getY() + 24 + segments.length * ROW_HEIGHT, uvOffset, 24, 8, 8);
+        addQuad(matrix, getX() + width - 8, getY() + 24 + segments.length * ROW_HEIGHT, uvOffset + 24, 24, 8, 8);
 
-        //addQuad(matrix, x, y + 24 + segments.length * ROW_SIZE, 32, 24, WIDTH, 8);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
         for (var segment : segments) {
-            segment.render(matrices, mouseX, mouseY);
+            segment.render(context, mouseX, mouseY);
         }
 
-        textRenderer.draw(matrices, getMessage(), getX() + 7, getY() + 7, 0x404040);
+        context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0x404040, false);
     }
 
     private static void addQuad(Matrix4f matrix, int x, int y, int u, int v, int width, int height) {
@@ -204,7 +229,11 @@ public class NodeWidget extends ClickableWidget {
         return super.clicked(mouseX, mouseY);
     }
 
-    public class Segment extends DrawableHelper {
+    public EditorScreen getParent() {
+        return parent;
+    }
+
+    public class Segment {
         public final int x;
         public final int y;
         public final Connector<?> connector;
@@ -229,8 +258,9 @@ public class NodeWidget extends ClickableWidget {
             return mouseX > getConnectorX() - 2 && mouseX < getConnectorX() + 6 && mouseY > getConnectorY() - 2 && mouseY < getConnectorY() + 6;
         }
 
-        public void render(MatrixStack matrices, int mouseX, int mouseY) {
+        public void render(DrawContext context, int mouseX, int mouseY) {
             var textRenderer = Screens.getTextRenderer(parent);
+            var matrices = context.getMatrices();
             var matrix = matrices.peek().getPositionMatrix();
             boolean hovered = hasConnectorAt(mouseX, mouseY);
 
@@ -246,9 +276,9 @@ public class NodeWidget extends ClickableWidget {
             RenderSystem.setShaderColor(1, 1, 1, 1);
 
             if (!isOutput)
-                textRenderer.draw(matrices, this.connector.id(), (float) x + 16, (float) (y + 2), 0x404040);
+                context.drawText(textRenderer, this.connector.id(), x + 16, y + 2, 0x404040, false);
             else
-                textRenderer.draw(matrices, this.connector.id(), (float) (x + width - 16 - textRenderer.getWidth(this.connector.id())), (float) (y + 2), 0x404040);
+                context.drawText(textRenderer, this.connector.id(), x + width - 16 - textRenderer.getWidth(this.connector.id()), y + 2, 0x404040, false);
         }
     }
 }
