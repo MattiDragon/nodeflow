@@ -4,12 +4,14 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.context.Context;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
+import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeGroup;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.network.PacketByteBuf;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Contains info about an environment in which graphs exist. For most use cases there should only be need for a single environment per system using nodeflow, but if you, for example, would like some nodes to unlockable as part of you mods progressions you can make a new environment for each usage.
@@ -28,41 +30,55 @@ public record GraphEnvironment(List<NodeType<?>> allowedNodeTypes, List<DataType
         allowedDataTypes = new ArrayList<>(allowedDataTypes);
         availableContexts = new ArrayList<>(availableContexts);
 
-        this.allowedNodeTypes = List.copyOf(allowedNodeTypes);
+        this.allowedNodeTypes = Collections.unmodifiableList(allowedNodeTypes);
         this.allowedDataTypes = List.copyOf(allowedDataTypes);
         this.availableContexts = List.copyOf(availableContexts);
         this.groups = List.copyOf(groups);
 
         var dummyGraph = new Graph(this);
-        List<ContextType<?>> finalAvailableContexts = availableContexts;
-        var dummyContext = new DummyContext(finalAvailableContexts);
+        var dummyContext = new DummyContext(availableContexts);
 
-        var nodes = allowedNodeTypes.stream().map(NodeType::generator)
-                .map(generator -> generator.apply(dummyGraph))
-                .toList();
+        var errors = new ArrayList<RuntimeException>();
+
+        var nodes = new ArrayList<Node>();
+        for (var type : allowedNodeTypes) {
+            var node = type.generator().apply(dummyGraph);
+            if (node.type != type) {
+                errors.add(new IllegalStateException("Node type %s produced a node with type %s which is different and not allowed!".formatted(type, node.type)));
+                continue;
+            }
+            nodes.add(node);
+        }
 
         outer:
         for (var node : nodes) {
             for (ContextType<?> contextType : node.contexts) {
                 if (!dummyContext.contains(contextType)) {
-                    allowedNodeTypes.remove(node.type);
+                    errors.add(new IllegalArgumentException("Node with type %s requires context %s which is not available!".formatted(node.type, contextType)));
                     continue outer;
                 }
             }
 
             for (Connector<?> connector : node.getInputs()) {
                 if (!allowedDataTypes.contains(connector.type())) {
-                    allowedNodeTypes.remove(node.type);
+                    errors.add(new IllegalArgumentException("Node with type %s has input with type %s which is not available!".formatted(node.type, connector.type())));
                     continue outer;
                 }
             }
 
             for (Connector<?> connector : node.getOutputs()) {
                 if (!allowedDataTypes.contains(connector.type())) {
-                    allowedNodeTypes.remove(node.type);
+                    errors.add(new IllegalArgumentException("Node with type %s has output with type %s which is not available!".formatted(node.type, connector.type())));
                     continue outer;
                 }
             }
+        }
+        if (!errors.isEmpty()) {
+            var exception = new IllegalStateException("Failed to build graph environment", errors.get(0));
+            for (int i = 1; i < errors.size(); i++) {
+                exception.addSuppressed(errors.get(i));
+            }
+            throw exception;
         }
     }
 
