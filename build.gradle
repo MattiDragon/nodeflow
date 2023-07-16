@@ -62,9 +62,7 @@ jar {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
+    publications.register("mavenJava", MavenPublication) {
+        from components.java
     }
 }
