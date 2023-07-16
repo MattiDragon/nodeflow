@@ -2,6 +2,8 @@ package io.github.mattidragon.nodeflow.ui.widget;
 
 import com.google.common.collect.Lists;
 import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.navigation.GuiNavigation;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
@@ -27,6 +29,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     public final int height;
     public boolean visible = true;
     public boolean active = true;
+    private boolean focused = false;
 
     private int zoom;
     private double viewX;
@@ -109,7 +112,18 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isMouseOver(mouseX, mouseY) || !active || !visible) return false;
-        super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button);
+        /*
+         Super returns true if a child accepts the click and sets that child as focused.
+         We read the focused element and move it to the top.
+         This is done here and not when the focus is set because keyboard nav doesn't like the child order changing.
+        */
+        if (super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button)) {
+            // Only children should be able to get focused
+            //noinspection unchecked
+            var focused = (T) getFocused();
+            children.remove(focused);
+            children.add(0, focused);
+        }
         return true;
     }
 
@@ -203,6 +217,11 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     }
 
     @Override
+    public ScreenRect getNavigationFocus() {
+        return new ScreenRect(x, y, width, height);
+    }
+
+    @Override
     public void appendNarrations(NarrationMessageBuilder builder) {
         if (getFocused() instanceof Narratable narratable)
             narratable.appendNarrations(builder);
@@ -238,13 +257,30 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         this.zoom = zoom;
     }
 
+    @Nullable
     @Override
-    public void setFocused(@Nullable Element focused) {
-        //noinspection SuspiciousMethodCalls
-        if (children.remove(focused)) { // Move the child to first place when clicked (hacky)
-            //noinspection unchecked
-            children.add(0, (T) focused);
-        }
-        super.setFocused(focused);
+    public GuiNavigationPath getFocusedPath() {
+        return this.getFocused() == null ? GuiNavigationPath.of(this) : super.getFocusedPath();
+    }
+
+    @Nullable
+    @Override
+    public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+        if (!active) return null;
+        if (!this.isFocused()) return GuiNavigationPath.of(this);
+        if (getFocused() == null && navigation.equals(new GuiNavigation.Tab(false))) return null;
+
+        return super.getNavigationPath(navigation);
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        this.focused = focused;
+        if (!focused) this.setFocused(null);
+    }
+
+    @Override
+    public boolean isFocused() {
+        return focused;
     }
 }

@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower' version '1.7.1'
+    id 'fabric-loom' version '1.3-SNAPSHOT'
+    id 'io.github.juuxel.loom-vineflower' version '1.11.0'
     id 'maven-publish'
 }
 
@@ -9,6 +9,10 @@ group = project.maven_group
 archivesBaseName = project.archives_base_name
 
 repositories {
+    maven { url = "https://maven.terraformersmc.com" }
+    maven { url = "https://maven.quiltmc.org/repository/release" }
+    maven { url = "https://api.modrinth.com/maven" }
+    maven { url = "https://maven.isxander.dev/releases" }
     maven { url = "https://jitpack.io" }
 }
 
@@ -17,6 +21,11 @@ dependencies {
     mappings "net.fabricmc:yarn:$yarn_mappings:v2"
     modImplementation "net.fabricmc:fabric-loader:$loader_version"
 
+    modCompileOnly modLocalRuntime("dev.isxander:controlify:$controllify_version") {
+        exclude group: "maven.modrinth", module: "sodium"
+        exclude group: "maven.modrinth", module: "iris"
+        exclude group: "maven.modrinth", module: "immediatelyfast"
+    }
     modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_version"
     include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:$mixin_extras_version")))
 }

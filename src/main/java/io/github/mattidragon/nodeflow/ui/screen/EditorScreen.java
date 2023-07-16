@@ -48,15 +48,15 @@ public class EditorScreen extends Screen {
     protected long lastHoveredTimestamp = 0;
     public @Nullable Connector<?> connectingConnector;
 
-    protected ButtonWidget backButton;
+    public ButtonWidget backButton;
     protected final Map<NodeGroup, List<ButtonWidget>> nodeButtons = new HashMap<>();
     protected final List<ButtonWidget> groupButtons = new ArrayList<>();
     @Nullable
     protected NodeGroup activeGroup = null;
 
-    protected ButtonWidget plusButton;
-    protected ButtonWidget deleteButton;
-    protected AddNodesWidget addMenu;
+    public ButtonWidget plusButton;
+    public ButtonWidget deleteButton;
+    public AddNodesWidget addMenu;
     protected EditorAreaWidget area;
 
     public EditorScreen(Text title, Graph graph) {
@@ -364,14 +364,6 @@ public class EditorScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
     }
 
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers))
-            return true;
-
-        return area.keyPressed(keyCode, scanCode, modifiers);
-    }
-
     private void renderArea(DrawContext context) {
         var rows = (this.height - GRID_OFFSET * 2) / TILE_SIZE;
         var columns = (this.width - GRID_OFFSET * 2) / TILE_SIZE;
@@ -385,31 +377,32 @@ public class EditorScreen extends Screen {
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
         var matrix = context.getMatrices().peek().getPositionMatrix();
+        var vOffset = area.isFocused() ? 32 : 0;
 
         // Draws the main grid
         for (int x = 0; x < columns; x++) {
             for (int y = 0; y < rows; y++) {
-                addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, GRID_OFFSET + TILE_SIZE * y, 8, 8, 16, 16);
+                addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, GRID_OFFSET + TILE_SIZE * y, 8, 8 + vOffset, 16, 16);
             }
         }
 
         // Draws top and bottoms
         for (int x = 0; x < columns; x++) {
-            addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, BORDER_OFFSET, 8, 0, 16, 8);
-            addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, GRID_OFFSET + boxHeight, 8, 24, 16, 8);
+            addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, BORDER_OFFSET, 8, vOffset, 16, 8);
+            addTexturedQuad(matrix, GRID_OFFSET + TILE_SIZE * x, GRID_OFFSET + boxHeight, 8, 24 + vOffset, 16, 8);
         }
 
         // Draws sides
         for (int y = 0; y < rows; y++) {
-            addTexturedQuad(matrix, BORDER_OFFSET, GRID_OFFSET + TILE_SIZE * y, 0, 8, 8, 16);
-            addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + TILE_SIZE * y, 24, 8, 8, 16);
+            addTexturedQuad(matrix, BORDER_OFFSET, GRID_OFFSET + TILE_SIZE * y, 0, 8 + vOffset, 8, 16);
+            addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + TILE_SIZE * y, 24, 8 + vOffset, 8, 16);
         }
 
         // Draws corners
-        addTexturedQuad(matrix, BORDER_OFFSET, BORDER_OFFSET, 0, 0, 8, 8);
-        addTexturedQuad(matrix, BORDER_OFFSET, GRID_OFFSET + boxHeight, 0, 24, 8, 8);
-        addTexturedQuad(matrix, GRID_OFFSET + boxWidth, BORDER_OFFSET , 24, 0, 8, 8);
-        addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + boxHeight, 24, 24, 8, 8);
+        addTexturedQuad(matrix, BORDER_OFFSET, BORDER_OFFSET, 0, vOffset, 8, 8);
+        addTexturedQuad(matrix, BORDER_OFFSET, GRID_OFFSET + boxHeight, 0, 24 + vOffset, 8, 8);
+        addTexturedQuad(matrix, GRID_OFFSET + boxWidth, BORDER_OFFSET , 24, vOffset, 8, 8);
+        addTexturedQuad(matrix, GRID_OFFSET + boxWidth, GRID_OFFSET + boxHeight, 24, 24 + vOffset, 8, 8);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }

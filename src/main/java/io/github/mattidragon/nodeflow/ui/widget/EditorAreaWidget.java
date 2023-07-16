@@ -184,6 +184,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     public void setContextMenu(int x, int y, @Nullable NodeWidget node) {
         contextMenu.show(x, y, node);
         setFocused(contextMenu);
+        contextMenu.setFocused(contextMenu.buttons.get(0));
     }
 
     @Override
@@ -191,6 +192,13 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (Screen.isPaste(keyCode)) {
             pasteNode(x + width / 2.0, x + height / 2.0);
             return true;
+        }
+
+        if (contextMenu.isVisible() && (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN))
+            return false;
+        if (contextMenu.isVisible() && (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT)) {
+            contextMenu.hide();
+            return false;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -299,11 +307,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             hide();
 
             buttons.add(ButtonWidget.builder(ScreenTexts.CANCEL, __ -> contextMenu.hide()).size(100, 12).build());
-            if (node == null) {
-                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(x, y))
-                        .size(100, 12)
-                        .build());
-            } else {
+            if (node != null) {
                 buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> duplicateNode())
                         .size(100, 12)
                         .build());
@@ -311,6 +315,9 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                         .size(100, 12)
                         .build());
                 buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.copy"), __ -> copyNode())
+                        .size(100, 12)
+                        .build());
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(x, y))
                         .size(100, 12)
                         .build());
                 buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.cut"), __ -> cutNode())
@@ -321,6 +328,10 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                             .size(100, 12)
                             .build());
                 }
+            } else {
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(x, y))
+                        .size(100, 12)
+                        .build());
             }
             this.node = node;
 
@@ -334,6 +345,10 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
         public void hide() {
             buttons.clear();
+        }
+
+        public boolean isVisible() {
+            return children().size() > 0;
         }
 
         @Override

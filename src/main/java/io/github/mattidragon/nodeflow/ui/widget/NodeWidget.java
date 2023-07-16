@@ -8,15 +8,21 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.ScreenRect;
+import net.minecraft.client.gui.navigation.GuiNavigation;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.input.KeyCodes;
 import net.minecraft.client.render.*;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +49,7 @@ public class NodeWidget extends ClickableWidget {
 
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-        //TODO: implement
+        appendDefaultNarrations(builder);
     }
 
     private static int calcWidth(Node node, TextRenderer renderer) {
@@ -79,6 +85,28 @@ public class NodeWidget extends ClickableWidget {
             return true;
         }
 
+        switch (keyCode) {
+            case GLFW.GLFW_KEY_LEFT -> {
+                setX(getX() - 10);
+                updateNodePos();
+                return true;
+            }
+            case GLFW.GLFW_KEY_DOWN -> {
+                setY(getY() + 10);
+                updateNodePos();
+                return true;
+            }
+            case GLFW.GLFW_KEY_UP -> {
+                setY(getY() - 10);
+                updateNodePos();
+                return true;
+            }
+            case GLFW.GLFW_KEY_RIGHT -> {
+                setX(getX() + 10);
+                updateNodePos();
+                return true;
+            }
+        }
         return false;
     }
 
@@ -112,6 +140,10 @@ public class NodeWidget extends ClickableWidget {
         setX((int) (mouseX + dragX));
         setY((int) (mouseY + dragY));
 
+        updateNodePos();
+    }
+
+    private void updateNodePos() {
         node.guiX = getX() + width / 2;
         node.guiY = getY() + height / 2;
     }
@@ -229,8 +261,29 @@ public class NodeWidget extends ClickableWidget {
         return super.clicked(mouseX, mouseY);
     }
 
+    @Nullable
+    @Override
+    public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+        var area = parent.getArea();
+        if (area.reverseModifyX(getX() + width) < area.x ||
+            area.reverseModifyY(getY() + height) < area.y ||
+            area.reverseModifyX(getX()) > area.x + area.width ||
+            area.reverseModifyY(getY()) > area.y + area.height) return null;
+
+        return super.getNavigationPath(navigation);
+    }
+
     public EditorScreen getParent() {
         return parent;
+    }
+
+    @Override
+    public ScreenRect getNavigationFocus() {
+        var area = parent.getArea();
+        return new ScreenRect((int) area.reverseModifyX(this.getX()),
+                (int) area.reverseModifyY(this.getY()),
+                (int) area.reverseModifyDeltaX(this.getWidth()),
+                (int) area.reverseModifyDeltaY(this.getHeight()));
     }
 
     public class Segment {
