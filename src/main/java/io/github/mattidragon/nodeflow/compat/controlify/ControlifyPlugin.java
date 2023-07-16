@@ -1,5 +1,6 @@
 package io.github.mattidragon.nodeflow.compat.controlify;
 
+import dev.isxander.controlify.Controlify;
 import dev.isxander.controlify.api.bind.BindingSupplier;
 import dev.isxander.controlify.api.buttonguide.ButtonGuideApi;
 import dev.isxander.controlify.api.buttonguide.ButtonGuidePredicate;
@@ -11,10 +12,11 @@ import dev.isxander.controlify.bindings.GamepadBinds;
 import dev.isxander.controlify.controller.Controller;
 import dev.isxander.controlify.screenop.ScreenProcessor;
 import dev.isxander.controlify.screenop.ScreenProcessorProvider;
-import dev.isxander.controlify.virtualmouse.VirtualMouseBehaviour;
 import dev.isxander.controlify.virtualmouse.VirtualMouseHandler;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
+import io.github.mattidragon.nodeflow.ui.screen.HandledEditorScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
@@ -29,8 +31,10 @@ public class ControlifyPlugin implements ControlifyProxy {
     private BindingSupplier editorLeftKey;
     private BindingSupplier editorRightKey;
 
+    @Override
     public void register() {
-        ScreenProcessorProvider.REGISTRY.register(EditorScreen.class, EditorScreenProcessor::new);
+        registerScreenType(EditorScreen.class);
+        registerScreenType(HandledEditorScreen.class);
         editorUpKey = ControllerBindings.Api.INSTANCE.registerBind(NodeFlow.id("editor_up"), builder ->
                 builder.defaultBind(GamepadBinds.RIGHT_STICK_FORWARD)
                         .category(NODEFLOW_CATEGORY)
@@ -49,22 +53,24 @@ public class ControlifyPlugin implements ControlifyProxy {
                         .context(BIND_CONTEXT));
     }
 
+    @Override
+    public void registerScreenType(Class<? extends EditorScreen> clazz) {
+        ScreenProcessorProvider.REGISTRY.register(clazz, EditorScreenProcessor::new);
+    }
+
     private class EditorScreenProcessor extends ScreenProcessor<EditorScreen> {
         public EditorScreenProcessor(EditorScreen screen) {
             super(screen);
         }
 
         @Override
-        public VirtualMouseBehaviour virtualMouseBehaviour() {
-            return VirtualMouseBehaviour.ENABLED;
-        }
-
-        @Override
         public void onWidgetRebuild() {
             super.onWidgetRebuild();
-            ButtonGuideApi.addGuideToButton(screen.plusButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_1, ButtonRenderPosition.TEXT, ButtonGuidePredicate.ALWAYS);
-            ButtonGuideApi.addGuideToButton(screen.deleteButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_2, ButtonRenderPosition.TEXT, ButtonGuidePredicate.ALWAYS);
-            ButtonGuideApi.addGuideToButton(screen.backButton, controller -> controller.bindings().GUI_BACK, ButtonRenderPosition.TEXT, ButtonGuidePredicate.ALWAYS);
+            ButtonGuidePredicate<ButtonWidget> predicate = button -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
+
+            ButtonGuideApi.addGuideToButton(screen.plusButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_1, ButtonRenderPosition.TEXT, predicate);
+            ButtonGuideApi.addGuideToButton(screen.deleteButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_2, ButtonRenderPosition.TEXT, predicate);
+            ButtonGuideApi.addGuideToButton(screen.backButton, controller -> controller.bindings().GUI_BACK, ButtonRenderPosition.TEXT, predicate);
         }
 
         @Override
@@ -81,6 +87,12 @@ public class ControlifyPlugin implements ControlifyProxy {
 
             if (controller.bindings().GUI_PRESS.justPressed())
                 screen.keyPressed(GLFW.GLFW_KEY_ENTER, 0, 0);
+
+            var area = screen.getArea();
+            var impulseX = editorRightKey.onController(controller).state() - editorLeftKey.onController(controller).state();
+            var impulseY = editorDownKey.onController(controller).state() - editorUpKey.onController(controller).state();
+            area.setViewX(area.getViewX() + impulseX * MathHelper.abs(impulseX) * -10f);
+            area.setViewY(area.getViewY() + impulseY * MathHelper.abs(impulseY) * -10f);
         }
 
         @Override
@@ -88,8 +100,8 @@ public class ControlifyPlugin implements ControlifyProxy {
             var area = screen.getArea();
             var impulseX = editorRightKey.onController(controller).state() - editorLeftKey.onController(controller).state();
             var impulseY = editorDownKey.onController(controller).state() - editorUpKey.onController(controller).state();
-            area.setViewX(area.getViewX() + impulseX * MathHelper.abs(impulseX) * 20f);
-            area.setViewY(area.getViewY() + impulseY * MathHelper.abs(impulseY) * 20f);
+            area.setViewX(area.getViewX() + impulseX * MathHelper.abs(impulseX) * -10f);
+            area.setViewY(area.getViewY() + impulseY * MathHelper.abs(impulseY) * -10f);
         }
     }
 }
