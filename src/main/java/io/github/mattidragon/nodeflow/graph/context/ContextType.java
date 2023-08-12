@@ -9,6 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.DefaultedRegistry;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -16,7 +17,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public record ContextType<T>(Class<T> type, ContextType<?>[] parents) {
-    public static final DefaultedRegistry<ContextType<?>> REGISTRY = FabricRegistryBuilder.<ContextType<?>>createDefaulted(null, NodeFlow.id("context_type"), NodeFlow.id("dummy")).buildAndRegister();
+    public static final RegistryKey<Registry<ContextType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("context_type"));
+    public static final DefaultedRegistry<ContextType<?>> REGISTRY = FabricRegistryBuilder.createDefaulted(KEY, NodeFlow.id("dummy")).buildAndRegister();
 
     public static final ContextType<MinecraftServer> SERVER = register(new ContextType<>(MinecraftServer.class), NodeFlow.id("server"));
     public static final ContextType<World> WORLD = register(new ContextType<>(World.class), NodeFlow.id("world"));

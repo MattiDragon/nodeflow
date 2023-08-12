@@ -45,10 +45,11 @@ public class NodeConfigScreen extends Screen {
 
         context.fill(x - 2, 18, width - 18, height - 18, 0x33ffffff);
 
-        if (texts.size() > 0)
+        if (!texts.isEmpty()) {
             context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.errors"), x, 20, 0xff5555, false);
-        else
+        } else {
             context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.no_errors"), x, 20, 0x55ff55, false);
+        }
 
         for (var text : texts) {
             context.drawText(textRenderer, text, x, y, 0xffffff, false);
@@ -63,6 +64,8 @@ public class NodeConfigScreen extends Screen {
     public void close() {
         parent.graph.cleanConnections(owner);
         parent.syncGraph();
-        client.setScreen(parent);
+        if (client != null) {
+            client.setScreen(parent);
+        }
     }
 }

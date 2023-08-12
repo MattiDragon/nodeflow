@@ -348,7 +348,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         }
 
         public boolean isVisible() {
-            return children().size() > 0;
+            return !children().isEmpty();
         }
 
         @Override
@@ -365,7 +365,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (buttons.size() == 0) return false;
+            if (buttons.isEmpty()) return false;
 
             if (!super.mouseClicked(mouseX, mouseY, button)) {
                 // Hide if clicked outside

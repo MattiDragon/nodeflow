@@ -121,8 +121,10 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             // Only children should be able to get focused
             //noinspection unchecked
             var focused = (T) getFocused();
-            children.remove(focused);
-            children.add(0, focused);
+            // If the node was deleted due to the click we don't want to add it back
+            if (children.remove(focused)) {
+                children.add(0, focused);
+            }
         }
         return true;
     }

@@ -56,7 +56,7 @@ public class EditorScreen extends Screen {
 
     public ButtonWidget plusButton;
     public ButtonWidget deleteButton;
-    public AddNodesWidget addMenu;
+    private AddNodesWidget addMenu;
     protected EditorAreaWidget area;
 
     public EditorScreen(Text title, Graph graph) {
@@ -276,9 +276,9 @@ public class EditorScreen extends Screen {
     public void mouseMoved(double mouseX, double mouseY) {
         if (isAddingNode) return;
         var connector = findConnectorAt(mouseX, mouseY);
-        if (connector == null) return;
+        if (connector == null || client == null) return;
 
-        long time = MinecraftClient.getInstance().world.getTime();
+        long time = client.world == null ? 0 : client.world.getTime();
         if (!connector.equals(lastHoveredConnector) || time - lastHoveredTimestamp > 10) {
             MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.7f));
         }
@@ -346,7 +346,9 @@ public class EditorScreen extends Screen {
     @Override
     public void close() {
         super.close();
-        client.player.closeHandledScreen();
+        if (client != null && client.player != null) {
+            client.player.closeHandledScreen();
+        }
     }
 
     @Override

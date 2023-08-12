@@ -31,9 +31,8 @@ public class SendNumberNode extends Node {
 
     @Override
     protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
-        context.get(ContextType.SERVER_WORLD).getPlayers(player -> context.get(ContextType.BLOCK_POS).getSquaredDistance(player.getPos()) < 16 * 16).forEach(player -> {
-            player.sendMessage(Text.translatable("node.nodeflow.broadcast.message", inputs[0].getAs(DataType.NUMBER)));
-        });
+        context.get(ContextType.SERVER_WORLD).getPlayers(player -> context.get(ContextType.BLOCK_POS).getSquaredDistance(player.getPos()) < 16 * 16).forEach(player ->
+                player.sendMessage(Text.translatable("node.nodeflow.broadcast.message", inputs[0].getAs(DataType.NUMBER))));
 
         return Either.left(new DataValue<?>[0]);
     }

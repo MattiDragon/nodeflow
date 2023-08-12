@@ -13,13 +13,15 @@ import io.github.mattidragon.nodeflow.graph.node.builtin.base.UnaryOperationNode
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.registry.DefaultedRegistry;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.function.Function;
 
 public record NodeType<T extends Node>(Function<Graph, T> generator) {
-    public static final DefaultedRegistry<NodeType<?>> REGISTRY = FabricRegistryBuilder.<NodeType<?>>createDefaulted(null, NodeFlow.id("node_type"), NodeFlow.id("time")).buildAndRegister();
+    public static final RegistryKey<Registry<NodeType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("node_type"));
+    public static final DefaultedRegistry<NodeType<?>> REGISTRY = FabricRegistryBuilder.createDefaulted(KEY, NodeFlow.id("time")).buildAndRegister();
 
     public static final NodeType<SendNumberNode> BROADCAST = register(new NodeType<>(SendNumberNode::new), NodeFlow.id("broadcast"));
     public static final NodeType<TimeNode> TIME = register(new NodeType<>(TimeNode::new), NodeFlow.id("time"));

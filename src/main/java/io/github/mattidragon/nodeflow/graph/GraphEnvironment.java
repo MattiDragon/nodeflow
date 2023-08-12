@@ -11,7 +11,6 @@ import net.minecraft.network.PacketByteBuf;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * Contains info about an environment in which graphs exist. For most use cases there should only be need for a single environment per system using nodeflow, but if you, for example, would like some nodes to unlockable as part of you mods progressions you can make a new environment for each usage.

@@ -21,7 +21,7 @@ dependencies {
     mappings "net.fabricmc:yarn:$yarn_mappings:v2"
     modImplementation "net.fabricmc:fabric-loader:$loader_version"
 
-    modCompileOnly modLocalRuntime("dev.isxander:controlify:$controllify_version") {
+    modCompileOnly /*modLocalRuntime*/("dev.isxander:controlify:$controllify_version") {
         exclude group: "maven.modrinth", module: "sodium"
         exclude group: "maven.modrinth", module: "iris"
         exclude group: "maven.modrinth", module: "immediatelyfast"

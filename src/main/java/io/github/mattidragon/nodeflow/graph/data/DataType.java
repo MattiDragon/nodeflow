@@ -6,11 +6,13 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.registry.DefaultedRegistry;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public record DataType<T>(int color, boolean splittable) {
-    public static final DefaultedRegistry<DataType<?>> REGISTRY = FabricRegistryBuilder.<DataType<?>>createDefaulted(null, NodeFlow.id("data_type"), NodeFlow.id("number")).buildAndRegister();
+    public static final RegistryKey<Registry<DataType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("data_type"));
+    public static final DefaultedRegistry<DataType<?>> REGISTRY = FabricRegistryBuilder.createDefaulted(KEY, NodeFlow.id("number")).buildAndRegister();
 
     public static final DataType<Double> NUMBER = register(new DataType<>(0x5555ff, true), NodeFlow.id("number"));
     public static final DataType<Boolean> BOOLEAN = register(new DataType<>(0xff5555, true), NodeFlow.id("boolean"));
@@ -44,7 +46,7 @@ public record DataType<T>(int color, boolean splittable) {
     }
 
     public Text name() {
-        return Text.translatable("data_type." + REGISTRY.getId(this).toTranslationKey());
+        return Text.translatable(REGISTRY.getId(this).toTranslationKey("data_type"));
     }
 
     @Override
