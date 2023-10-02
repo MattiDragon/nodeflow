@@ -6,10 +6,6 @@ import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.context.Context;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
-import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
-import io.github.mattidragon.nodeflow.ui.screen.NodeConfigScreen;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
@@ -64,15 +60,6 @@ public abstract class Node {
         }
 
         return true;
-    }
-
-    @Environment(EnvType.CLIENT)
-    public NodeConfigScreen createConfigScreen(EditorScreen parent) {
-        return null;
-    }
-
-    public boolean hasConfig() {
-        return false;
     }
 
     public void readNbt(NbtCompound data) {

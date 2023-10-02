@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "nodeflow:add",
+    "nodeflow:subtract",
+    "nodeflow:multiply",
+    "nodeflow:divide",
+    "nodeflow:modulo",
+    "nodeflow:negate",
+    "nodeflow:min",
+    "nodeflow:max",
+    "nodeflow:pow"
+  ]
+}

@@ -3,8 +3,11 @@ package io.github.mattidragon.nodeflow;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
+import io.github.mattidragon.nodeflow.graph.node.group.DirectNodeGroup;
+import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
+import io.github.mattidragon.nodeflow.graph.node.group.TagNodeGroup;
 import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
-import io.github.mattidragon.nodeflow.ui.screen.EditorScreenHandler;
+import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.registry.Registries;
@@ -30,5 +33,8 @@ public class NodeFlow implements ModInitializer {
         NodeType.register();
         DataType.register();
         ContextType.register();
+
+        NodeGroup.registerDecoder(TagNodeGroup.DECODER_ID, TagNodeGroup::new);
+        NodeGroup.registerDecoder(DirectNodeGroup.DECODER_ID, DirectNodeGroup::new);
     }
 }

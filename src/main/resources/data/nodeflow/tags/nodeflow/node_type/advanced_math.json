@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "nodeflow:sin",
+    "nodeflow:cos",
+    "nodeflow:tan",
+    "nodeflow:sinh",
+    "nodeflow:cosh",
+    "nodeflow:tanh",
+    "nodeflow:asin",
+    "nodeflow:acos",
+    "nodeflow:atan",
+    "nodeflow:log10",
+    "nodeflow:log",
+    "nodeflow:cbrt",
+    "nodeflow:sqrt",
+    "nodeflow:ceil",
+    "nodeflow:floor",
+    "nodeflow:abs",
+    "nodeflow:signum"
+  ]
+}

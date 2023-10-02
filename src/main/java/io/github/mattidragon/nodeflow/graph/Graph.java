@@ -37,7 +37,7 @@ public class Graph {
     }
 
     public void addNode(Node node) {
-        if (!env.allowedNodeTypes().contains(node.type))
+        if (!env.isAllowedNodeType(node.type))
             throw new IllegalArgumentException("This graph doesn't support that node type: %s".formatted(node.type));
         if (nodes.containsKey(node.id)) {
             NodeFlow.LOGGER.warn("Tried to add node that already is in graph. (id: {}, type: {})", node.id, node.type);
@@ -142,7 +142,7 @@ public class Graph {
                     ignoredIds.add(nodeNbt.getUuid("id"));
                 continue;
             }
-            if (!env.allowedNodeTypes().contains(type.get())) {
+            if (!env.isAllowedNodeType(type.get())) {
                 NodeFlow.LOGGER.warn("Unsupported node type: {}. Ignoring node", nodeNbt.getString("type"));
                 // uuid getter isn't safe
                 if (nodeNbt.containsUuid("id"))

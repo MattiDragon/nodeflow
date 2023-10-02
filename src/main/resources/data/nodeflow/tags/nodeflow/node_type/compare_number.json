@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "nodeflow:num_eql",
+    "nodeflow:num_neql",
+    "nodeflow:less",
+    "nodeflow:greater"
+  ]
+}

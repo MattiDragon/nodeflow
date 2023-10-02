@@ -7,11 +7,6 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import io.github.mattidragon.nodeflow.ui.screen.EditorScreen;
-import io.github.mattidragon.nodeflow.ui.screen.NodeConfigScreen;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
@@ -50,15 +45,16 @@ public class NumberNode extends Node {
         return Either.left(new DataValue<?>[]{DataType.NUMBER.makeValue(Double.valueOf(value))});
     }
 
-    @Environment(EnvType.CLIENT)
-    @Override
-    public NodeConfigScreen createConfigScreen(EditorScreen parent) {
-        return new ConfigScreen(parent);
-    }
-
-    @Override
     public boolean hasConfig() {
         return true;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override
@@ -71,20 +67,5 @@ public class NumberNode extends Node {
     public void writeNbt(NbtCompound data) {
         super.writeNbt(data);
         data.putString("value", value);
-    }
-
-    private class ConfigScreen extends NodeConfigScreen {
-        public ConfigScreen(EditorScreen parent) {
-            super(NumberNode.this, parent);
-        }
-
-        @Override
-        protected void init() {
-            super.init();
-            var x = ((width - 200) / 2) - 50;
-            var field = addDrawableChild(new TextFieldWidget(textRenderer, x, 70, 100, 20, Text.empty()));
-            field.setChangedListener((value) -> NumberNode.this.value = (value));
-            field.setText(value);
-        }
     }
 }

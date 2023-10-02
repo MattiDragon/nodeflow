@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "nodeflow:zero",
+    "nodeflow:one",
+    "nodeflow:nan",
+    "nodeflow:infinity",
+    "nodeflow:true",
+    "nodeflow:false",
+    "nodeflow:number",
+    "nodeflow:pi",
+    "nodeflow:e"
+  ]
+}

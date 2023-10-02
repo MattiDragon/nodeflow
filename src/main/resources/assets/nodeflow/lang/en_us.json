@@ -108,8 +108,14 @@
   "group.nodeflow.debug": "Debug",
   "group.nodeflow.advanced_math": "Advanced Math",
   "group.nodeflow.compare_number": "Compare Number",
-  "group.nodeflow.constants": "Constants",
+  "group.nodeflow.constant": "Constants",
 
   "key.nodeflow.debug": "Open node debug screen",
-  "key.categories.nodeflow": "Nodeflow"
+  "key.nodeflow.dev": "Open zoom area testing",
+  "key.categories.nodeflow": "Nodeflow",
+
+  "controlify.binding.nodeflow.editor_up": "Editor Up",
+  "controlify.binding.nodeflow.editor_down": "Editor Down",
+  "controlify.binding.nodeflow.editor_left": "Left Up",
+  "controlify.binding.nodeflow.editor_right": "Right Up"
 }

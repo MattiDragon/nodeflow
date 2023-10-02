@@ -1,0 +1,24 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: The type of release
+        required: true
+        type: choice
+        options: ["release", "beta", "alpha"]
+      minecraft-versions:
+        description: Overrides for supported versions
+        required: false
+        type: string
+
+jobs:
+  publish:
+    uses: MattiDragon/MattiDragon/.github/workflows/publish_base.yaml
+    with:
+      version-type: ${{ inputs.version-type }}
+      minecraft-versions: ${{ inputs.minecraft-versions }}
+      modrinth-id: ktKs9gT1
+    secrets:
+      modrinth-token: ${{ secrets.MODRINTH_TOKEN }}

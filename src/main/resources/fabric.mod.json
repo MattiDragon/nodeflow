@@ -10,23 +10,27 @@
   "contact": {
     "repo": "https://github.com/mattidragon/nodeflow"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "icon": "assets/nodeflow/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
-      "io.github.mattidragon.nodeflow.NodeFlowClient"
+      "io.github.mattidragon.nodeflow.client.NodeFlowClient"
     ],
     "main": [
       "io.github.mattidragon.nodeflow.NodeFlow"
     ]
   },
   "mixins": [
-    "nodeflow.mixins.json"
+    "nodeflow.mixins.json",
+    {
+      "environment": "client",
+      "config": "client.nodeflow.mixins.json"
+    }
   ],
   "depends": {
-    "fabricloader": ">=0.14.17",
-    "fabric-api": ">=0.76.0",
-    "minecraft": "~1.20-beta.4"
+    "fabricloader": ">=0.14.22",
+    "fabric-api": ">=0.89.0",
+    "minecraft": "~1.20.2"
   }
 }

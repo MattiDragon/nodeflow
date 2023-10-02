@@ -1,12 +1,7 @@
 package io.github.mattidragon.nodeflow.graph.context;
 
 import io.github.mattidragon.nodeflow.NodeFlow;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.DefaultedRegistry;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -25,23 +20,6 @@ public record ContextType<T>(Class<T> type, ContextType<?>[] parents) {
     public static final ContextType<ServerWorld> SERVER_WORLD = register(new ContextType<>(ServerWorld.class, new ContextType[]{ WORLD }), NodeFlow.id("server_world"));
     public static final ContextType<BlockPos> BLOCK_POS = register(new ContextType<>(BlockPos.class), NodeFlow.id("block_pos"));
     private static final ContextType<Void> DUMMY = register(new ContextType<>(Void.class), NodeFlow.id("dummy"));
-
-    @Environment(EnvType.CLIENT)
-    public static final ContextType<MinecraftClient> CLIENT;
-    @Environment(EnvType.CLIENT)
-    public static final ContextType<ClientWorld> CLIENT_WORLD;
-
-    static {
-        // They should only be referenced on the client anyway
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            CLIENT = register(new ContextType<>(MinecraftClient.class), NodeFlow.id("client"));
-            CLIENT_WORLD = register(new ContextType<>(ClientWorld.class, new ContextType[]{ WORLD }), NodeFlow.id("client_world"));
-        } else {
-            // This somehow doesn't cause NoSuchFieldErrors on servers (maybe fabric strips null values)?
-            CLIENT = null;
-            CLIENT_WORLD = null;
-        }
-    }
 
     public ContextType(Class<T> type, ContextType<?>[] parents) {
         this.type = type;

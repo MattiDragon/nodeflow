@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "nodeflow:and",
+    "nodeflow:or",
+    "nodeflow:xor",
+    "nodeflow:nand",
+    "nodeflow:nor",
+    "nodeflow:bool_eql",
+    "nodeflow:not"
+  ]
+}
