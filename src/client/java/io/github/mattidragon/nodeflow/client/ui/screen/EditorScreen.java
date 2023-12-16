@@ -116,7 +116,7 @@ public class EditorScreen extends Screen {
             updateVisibility();
         }).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
 
-        addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight(), GRID_OFFSET + 10));
+        addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight() - 10, GRID_OFFSET + 10));
         updateAddButtons();
         updateVisibility();
     }
