@@ -116,7 +116,7 @@ public class EditorScreen extends Screen {
             updateVisibility();
         }).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
 
-        addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight(), GRID_OFFSET + 10, height - GRID_OFFSET - 10));
+        addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight(), GRID_OFFSET + 10));
         updateAddButtons();
         updateVisibility();
     }
@@ -162,6 +162,7 @@ public class EditorScreen extends Screen {
         backButton.active = isAddingNode && activeGroup != null;
         backButton.visible = isAddingNode && activeGroup != null;
         addMenu.active = isAddingNode;
+        addMenu.visible = isAddingNode;
         deleteButton.active = !isAddingNode;
         deleteButton.visible = !isAddingNode;
         plusButton.active = !isDeletingNode;
@@ -189,10 +190,11 @@ public class EditorScreen extends Screen {
         }
 
         if (connectingConnector.isOutput() == row.isOutput()) {
-            if (row.isOutput())
+            if (row.isOutput()) {
                 showToast(Text.translatable("nodeflow.editor.toast.two_outputs").formatted(Formatting.RED));
-            else
+            } else {
                 showToast(Text.translatable("nodeflow.editor.toast.two_inputs").formatted(Formatting.RED));
+            }
             return;
         }
 
@@ -201,8 +203,9 @@ public class EditorScreen extends Screen {
             return;
         }
 
-        if (!row.type().splittable() || !row.isOutput())
+        if (!row.type().splittable() || !row.isOutput()) {
             graph.removeConnections(row);
+        }
         graph.addConnection(connectingConnector, row);
 
         var stack = new ArrayDeque<Connector<?>>();
@@ -243,6 +246,8 @@ public class EditorScreen extends Screen {
                 graph.removeConnections(connectingConnector);
 
             tryFindConnection(mouseX, mouseY);
+
+            area.children().forEach(NodeWidget::updateTooltip);
 
             connectingConnector = null;
         }
@@ -352,8 +357,8 @@ public class EditorScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context, mouseX, mouseY, delta);
-        for (var node : area.children())
-            node.updateTooltip();
+//        for (var node : area.children())
+//            node.updateTooltip();
 
         super.render(context, mouseX, mouseY, delta);
     }
@@ -372,14 +377,11 @@ public class EditorScreen extends Screen {
     }
 
     private static class AddNodesWidget extends ElementListWidget<AddNodesWidget.Entry> {
-        public boolean active = true;
-
-        public AddNodesWidget(MinecraftClient client, int width, int height, int top, int bottom) {
-            super(client, width, height, top, bottom, 30);
+        public AddNodesWidget(MinecraftClient client, int width, int height, int y) {
+            super(client, width, height, y, 30);
             setRenderBackground(false);
-//            setRenderHorizontalShadows(false);
             centerListVertically = true;
-            left = GRID_OFFSET;
+            setX(GRID_OFFSET);
         }
 
         @Override
@@ -413,14 +415,8 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-            if (!active) return;
-            super.render(context, mouseX, mouseY, delta);
-        }
-
-        @Override
         protected void renderList(DrawContext context, int mouseX, int mouseY, float delta) {
-            context.enableScissor(0, top, width + GRID_OFFSET, bottom);
+            context.enableScissor(0, getY(), width + GRID_OFFSET, height + getY());
             super.renderList(context, mouseX, mouseY, delta);
             context.disableScissor();
         }

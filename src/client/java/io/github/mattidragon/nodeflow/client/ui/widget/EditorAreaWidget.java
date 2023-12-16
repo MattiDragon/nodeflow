@@ -21,6 +21,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -130,7 +131,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         NbtCompound nbt;
         var bytes = new ByteArrayInputStream(clipboard.substring(CLIPBOARD_PREFIX.length()).getBytes());
         try (var in = Base64.getDecoder().wrap(bytes)) {
-            nbt = NbtIo.readCompressed(in);
+            nbt = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
         } catch (IOException e) {
             NodeFlow.LOGGER.warn("Failed to paste node", e);
             return;

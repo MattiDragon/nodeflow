@@ -16,13 +16,10 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.input.KeyCodes;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -167,7 +164,7 @@ public class NodeWidget extends ClickableWidget {
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         var textRenderer = Screens.getTextRenderer(parent);
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
@@ -193,22 +190,7 @@ public class NodeWidget extends ClickableWidget {
         }
 
         context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0x404040, false);
-    }
 
-    public static void addQuad(Matrix4f matrix, int x1, int y1, int u, int v, int width, int height, int color) {
-        int x2 = x1 + width;
-        int y2 = y1 + height;
-        float u1 = u / 256f;
-        float u2 = (u + width) / 256f;
-        float v1 = v / 256f;
-        float v2 = (v + height) / 256f;
-
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-
-        bufferBuilder.vertex(matrix, x1, y2, 0).texture(u1, v2).color(color).next();
-        bufferBuilder.vertex(matrix, x2, y2, 0).texture(u2, v2).color(color).next();
-        bufferBuilder.vertex(matrix, x2, y1, 0).texture(u2, v1).color(color).next();
-        bufferBuilder.vertex(matrix, x1, y1, 0).texture(u1, v1).color(color).next();
     }
 
     @Override
