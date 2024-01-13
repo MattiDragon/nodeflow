@@ -3,6 +3,7 @@ package io.github.mattidragon.nodeflow;
 import io.github.mattidragon.nodeflow.compat.controlify.ControlifyProxy;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.GraphEnvironment;
+import io.github.mattidragon.nodeflow.graph.context.ClientContextType;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeGroup;
@@ -32,6 +33,7 @@ public class NodeFlowClient implements ClientModInitializer {
     public void onInitializeClient() {
         HandledScreens.<EditorScreenHandler, HandledEditorScreen>register(NodeFlow.SCREEN_HANDLER, HandledEditorScreen::new);
         ControlifyProxy.INSTANCE.register();
+        ClientContextType.register();
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             var debugEditorKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.nodeflow.debug", GLFW.GLFW_KEY_K, "key.categories.nodeflow"));
