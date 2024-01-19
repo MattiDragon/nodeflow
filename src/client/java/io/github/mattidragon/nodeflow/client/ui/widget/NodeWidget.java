@@ -207,6 +207,14 @@ public class NodeWidget extends ClickableWidget {
     }
 
     @Override
+    public Text getMessage() {
+        if (node.nickname != null) {
+            return Text.literal(node.nickname).formatted(Formatting.ITALIC);
+        }
+        return super.getMessage();
+    }
+
+    @Override
     public boolean clicked(double mouseX, double mouseY) {
         return super.clicked(mouseX, mouseY);
     }

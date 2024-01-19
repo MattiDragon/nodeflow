@@ -21,8 +21,10 @@
   "nodeflow.editor.button.config.tooltip.errors": "Errors:",
   "nodeflow.editor.button.config.tooltip.invalid_config": "The configuration is invalid!",
   "nodeflow.editor.button.config.tooltip.not_connected": "Some connectors aren't connected!",
-  "nodeflow.editor.button.tag": "Tag",
-  "nodeflow.editor.button.back": "Back",
+  "nodeflow.editor.button.tag": "Set Tag",
+  "nodeflow.editor.button.name": "Set Name",
+  "nodeflow.editor.button.clear_name": "Clear",
+  "nodeflow.editor.button.nick_placeholder": "Nickname",
 
   "nodeflow.editor.node_tag.white": "White",
   "nodeflow.editor.node_tag.red": "Red",

@@ -8,6 +8,7 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,8 @@ public abstract class Node {
     public int guiX = 0;
     public int guiY = 0;
     public NodeTag tag = NodeTag.WHITE;
+    @Nullable
+    public String nickname = null;
     protected final Graph graph;
 
     protected Node(NodeType<?> type, List<ContextType<?>> contexts, Graph graph) {
@@ -69,6 +72,8 @@ public abstract class Node {
         guiX = data.getInt("guiX");
         guiY = data.getInt("guiY");
         tag = NodeTag.fromString(data.getString("tag"));
+        if (data.contains("nickname"))
+            nickname = data.getString("nickname");
     }
 
     public void writeNbt(NbtCompound data) {
@@ -77,6 +82,8 @@ public abstract class Node {
         data.putInt("guiX", guiX);
         data.putInt("guiY", guiY);
         data.putString("tag", tag.asString());
+        if (nickname != null)
+            data.putString("nickname", nickname);
     }
 
     public final Text getName() {

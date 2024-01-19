@@ -251,7 +251,7 @@ public class EditorScreen extends Screen {
 
             connectingConnector = null;
         }
-        setFocused(null);
+//        setFocused(null);
         // Sync node movement and connector changes
         syncGraph();
         return super.mouseReleased(mouseX, mouseY, button);
@@ -357,14 +357,12 @@ public class EditorScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context, mouseX, mouseY, delta);
-//        for (var node : area.children())
-//            node.updateTooltip();
 
         super.render(context, mouseX, mouseY, delta);
     }
 
     private void renderArea(DrawContext context) {
-        var texture = isFocused() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
+        var texture = area.isFocused() && client != null && client.getNavigationType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
         context.drawGuiTexture(texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
     }
 
