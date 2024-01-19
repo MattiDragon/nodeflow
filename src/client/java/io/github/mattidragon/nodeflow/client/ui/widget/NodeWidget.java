@@ -34,6 +34,8 @@ public class NodeWidget extends ClickableWidget {
     private final EditorScreen parent;
     private int dragX;
     private int dragY;
+    @Nullable
+    private Tooltip tooltip;
 
     public NodeWidget(Node node, EditorScreen parent) {
         super(node.guiX, node.guiY, calcWidth(node, Screens.getTextRenderer(parent)), 24 + 8 + (node.getInputs().length + node.getOutputs().length) * ROW_HEIGHT, node.getName());
@@ -119,7 +121,7 @@ public class NodeWidget extends ClickableWidget {
         dragX = (int) (getX() - mouseX);
         dragY = (int) (getY() - mouseY);
 
-        if (NodeConfigScreenRegistry.hasConfig(node) && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20) {
+        if (NodeConfigScreenRegistry.hasConfig(node) && isMouseOnButton(mouseX, mouseY)) {
             MinecraftClient.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(node, parent));
             return;
         }
@@ -130,6 +132,10 @@ public class NodeWidget extends ClickableWidget {
                 break;
             }
         }
+    }
+
+    private boolean isMouseOnButton(double mouseX, double mouseY) {
+        return mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20;
     }
 
     @Override
@@ -161,7 +167,7 @@ public class NodeWidget extends ClickableWidget {
         if (!node.isFullyConnected())
             tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.not_connected").formatted(Formatting.RED)));
 
-        setTooltip(Tooltip.of(Texts.join(tooltip, Text.literal("\n"))));
+        this.tooltip = Tooltip.of(Texts.join(tooltip, Text.literal("\n")));
     }
 
     @Override
@@ -195,6 +201,9 @@ public class NodeWidget extends ClickableWidget {
 
         context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0x404040, false);
 
+        if (isMouseOnButton(mouseX, mouseY) && tooltip != null) {
+            tooltip.render(hovered, isFocused(), new ScreenRect(getX() + width - 20, getY() + 4, 16, 16));
+        }
     }
 
     @Override
