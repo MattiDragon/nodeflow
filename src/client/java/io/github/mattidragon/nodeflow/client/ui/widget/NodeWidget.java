@@ -208,10 +208,7 @@ public class NodeWidget extends ClickableWidget {
 
     @Override
     public Text getMessage() {
-        if (node.nickname != null) {
-            return Text.literal(node.nickname).formatted(Formatting.ITALIC);
-        }
-        return super.getMessage();
+        return node.getName();
     }
 
     @Override
@@ -242,6 +239,10 @@ public class NodeWidget extends ClickableWidget {
                 (int) area.reverseModifyY(this.getY()),
                 (int) area.reverseModifyDeltaX(this.getWidth()),
                 (int) area.reverseModifyDeltaY(this.getHeight()));
+    }
+
+    public void updateWidth() {
+        this.width = calcWidth(node, Screens.getTextRenderer(parent));
     }
 
     public class Segment {

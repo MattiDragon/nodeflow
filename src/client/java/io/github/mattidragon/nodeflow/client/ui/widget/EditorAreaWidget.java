@@ -169,7 +169,13 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Trying to rename node without clicking node");
             return;
         }
+        // Blank nicknames are not allowed
+        // We only check client side as someone bypassing this isn't a big deal
+        if (name != null && name.isBlank()) {
+            name = null;
+        }
         contextMenu.node.node.nickname = name;
+        contextMenu.node.updateWidth();
         parent.syncGraph();
         contextMenu.hide();
     }

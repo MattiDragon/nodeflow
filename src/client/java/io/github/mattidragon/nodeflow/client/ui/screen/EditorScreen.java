@@ -374,6 +374,12 @@ public class EditorScreen extends Screen {
         return area;
     }
 
+    @Override
+    public void setFocused(@Nullable Element focused) {
+        if (focused == getFocused()) return;
+        super.setFocused(focused);
+    }
+
     private static class AddNodesWidget extends ElementListWidget<AddNodesWidget.Entry> {
         public AddNodesWidget(MinecraftClient client, int width, int height, int y) {
             super(client, width, height, y, 30);

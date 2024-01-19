@@ -125,6 +125,8 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             if (children.remove(focused)) {
                 children.add(0, focused);
             }
+        } else {
+            setFocused(null);
         }
         return true;
     }

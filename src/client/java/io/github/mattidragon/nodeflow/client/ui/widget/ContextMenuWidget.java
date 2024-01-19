@@ -74,7 +74,10 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
     }
 
     private void positionWidgets(int x, int y) {
-        var currentY = y;
+        var totalHeight = widgets.stream().mapToInt(ClickableWidget::getHeight).sum();
+        var screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+
+        var currentY = Math.min(y, screenHeight - totalHeight - 10);
         for (var button : widgets) {
             button.setX(x);
             button.setY(currentY);
@@ -131,6 +134,9 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
         var textField = new TextFieldWidget(textRenderer, 100, 20, Text.empty());
         textField.setPlaceholder(Text.translatable("nodeflow.editor.button.nick_placeholder").formatted(Formatting.GRAY));
         textField.setMaxLength(16);
+        if (node.node.nickname != null) {
+            textField.setText(node.node.nickname);
+        }
         widgets.add(textField);
 
         widgets.add(ButtonWidget.builder(ScreenTexts.DONE, __ -> area.renameNode(textField.getText()))

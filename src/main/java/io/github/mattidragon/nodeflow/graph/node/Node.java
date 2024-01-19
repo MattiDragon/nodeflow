@@ -8,6 +8,7 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -87,6 +88,9 @@ public abstract class Node {
     }
 
     public final Text getName() {
+        if (nickname != null) {
+            return Text.literal(nickname).formatted(Formatting.ITALIC);
+        }
         return type.name();
     }
 
