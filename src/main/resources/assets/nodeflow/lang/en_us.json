@@ -21,6 +21,16 @@
   "nodeflow.editor.button.config.tooltip.errors": "Errors:",
   "nodeflow.editor.button.config.tooltip.invalid_config": "The configuration is invalid!",
   "nodeflow.editor.button.config.tooltip.not_connected": "Some connectors aren't connected!",
+  "nodeflow.editor.button.tag": "Tag",
+  "nodeflow.editor.button.back": "Back",
+
+  "nodeflow.editor.node_tag.white": "White",
+  "nodeflow.editor.node_tag.red": "Red",
+  "nodeflow.editor.node_tag.green": "Green",
+  "nodeflow.editor.node_tag.blue": "Blue",
+  "nodeflow.editor.node_tag.yellow": "Yellow",
+  "nodeflow.editor.node_tag.aqua": "Aqua",
+  "nodeflow.editor.node_tag.purple": "Purple",
 
   "nodeflow.editor.toast.different_type": "Can't connect connectors of different types!",
   "nodeflow.editor.toast.two_outputs": "Can't connect two outputs!",

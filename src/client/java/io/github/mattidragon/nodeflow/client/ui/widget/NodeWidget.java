@@ -1,5 +1,6 @@
 package io.github.mattidragon.nodeflow.client.ui.widget;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
@@ -168,7 +169,10 @@ public class NodeWidget extends ClickableWidget {
         var textRenderer = Screens.getTextRenderer(parent);
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
+        var tagColor = node.tag.getColor();
+        RenderSystem.setShaderColor((tagColor >> 16 & 0xff) / 256f, (tagColor >> 8 & 0xff) / 256f, (tagColor & 0xff) / 256f, 1);
         context.drawGuiTexture(texture, getX(), getY(), width, height);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
 
         // Status indicator / config button
         if (!node.isFullyConnected())

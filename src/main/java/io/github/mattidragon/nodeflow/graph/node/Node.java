@@ -18,6 +18,7 @@ public abstract class Node {
     public final List<ContextType<?>> contexts;
     public int guiX = 0;
     public int guiY = 0;
+    public NodeTag tag = NodeTag.WHITE;
     protected final Graph graph;
 
     protected Node(NodeType<?> type, List<ContextType<?>> contexts, Graph graph) {
@@ -67,6 +68,7 @@ public abstract class Node {
             id = data.getUuid("id");
         guiX = data.getInt("guiX");
         guiY = data.getInt("guiY");
+        tag = NodeTag.fromString(data.getString("tag"));
     }
 
     public void writeNbt(NbtCompound data) {
@@ -74,6 +76,7 @@ public abstract class Node {
         data.putUuid("id", id);
         data.putInt("guiX", guiX);
         data.putInt("guiY", guiY);
+        data.putString("tag", tag.asString());
     }
 
     public final Text getName() {

@@ -6,6 +6,7 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.graph.Connection;
+import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.AbstractParentElement;
@@ -23,6 +24,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -158,6 +160,24 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             return;
         }
         MinecraftClient.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(contextMenu.node.node, parent));
+        contextMenu.hide();
+    }
+
+    private void tagNode() {
+        if (contextMenu.node == null) {
+            NodeFlow.LOGGER.warn("Clicked tag key without clicking node");
+            return;
+        }
+        contextMenu.setupTagging();
+    }
+
+    private void tagNode(NodeTag tag) {
+        if (contextMenu.node == null) {
+            NodeFlow.LOGGER.warn("Clicked tag key without clicking node");
+            return;
+        }
+        contextMenu.node.node.tag = tag;
+        parent.syncGraph();
         contextMenu.hide();
     }
 
@@ -330,6 +350,9 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                             .size(100, 12)
                             .build());
                 }
+                buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.tag"), __ -> tagNode())
+                        .size(100, 12)
+                        .build());
             } else {
                 buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> pasteNode(x, y))
                         .size(100, 12)
@@ -337,6 +360,10 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             }
             this.node = node;
 
+            positionWidgets(x, y);
+        }
+
+        private void positionWidgets(int x, int y) {
             var currentY = y;
             for (var button : buttons) {
                 button.setX(x);
@@ -347,6 +374,27 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
         public void hide() {
             buttons.clear();
+        }
+
+        public void setupTagging() {
+            if (buttons.isEmpty()) {
+                NodeFlow.LOGGER.warn("Tried to setup tagging without showing context menu");
+                return;
+            }
+            var x = buttons.get(0).getX();
+            var y = buttons.get(0).getY();
+            buttons.clear();
+            buttons.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.back"), __ -> show(x, y, node))
+                    .size(100, 12)
+                    .build());
+
+            for (var tag : NodeTag.values()) {
+                var text = Text.empty().append(Text.literal("■ ").setStyle(Style.EMPTY.withColor(tag.getColor()))).append(Text.translatable("nodeflow.editor.node_tag." + tag.asString()));
+                buttons.add(ButtonWidget.builder(text, __ -> tagNode(tag))
+                        .size(100, 12)
+                        .build());
+            }
+            positionWidgets(x, y);
         }
 
         public boolean isVisible() {
