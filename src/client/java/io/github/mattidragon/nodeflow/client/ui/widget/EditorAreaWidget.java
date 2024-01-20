@@ -11,8 +11,6 @@ import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
@@ -248,16 +246,11 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     @Override
-    protected void renderExtras(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderConnectors(matrices, mouseX, mouseY);
+    protected void renderExtras(DrawContext context, int mouseX, int mouseY, float delta) {
+        renderConnectors(context, mouseX, mouseY);
     }
 
-    private void renderConnectors(MatrixStack matrices, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.enableBlend();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-
+    private void renderConnectors(DrawContext context, int mouseX, int mouseY) {
         if (parent.connectingConnector != null) {
             var row = parent.findSegmentAt(mouseX, mouseY);
             var targetX = (int) modifyX(mouseX);
@@ -270,61 +263,100 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
             var connectingSegment = parent.findSegment(parent.connectingConnector);
 
-            renderConnectorLine(matrices, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color() | 0xaa000000);
+            renderConnectorLine(context, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color());
         }
 
         for (Connection connection : parent.graph.getConnections()) {
             var input = parent.findSegment(Objects.requireNonNull(connection.getTargetConnector(parent.graph)));
             var output = parent.findSegment(Objects.requireNonNull(connection.getSourceConnector(parent.graph)));
 
-            renderConnectorLine(matrices, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color() | 0xaa000000);
+            renderConnectorLine(context, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color());
         }
-
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-        RenderSystem.disableBlend();
     }
 
-    private static void renderConnectorLine(MatrixStack matrices, int x1, int y1, int x2, int y2, int color) {
-        var matrix = matrices.peek().getPositionMatrix();
-        var xOffset = x1 - x2;
+    private static void renderConnectorLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+        var xOffset = (x1 - x2) / 2;
         var yOffset = y1 - y2;
 
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+        // Used to fix issues caused by odd x distances
+        var pixelFix = (x1 - x2) % 2;
 
+        var cornersTexture = NodeFlow.id("textures/gui/connection_corners.png");
+        var horizontalTexture = NodeFlow.id("textures/gui/connection_horizontal.png");
+        var verticalTexture = NodeFlow.id("textures/gui/connection_vertical.png");
+
+        RenderSystem.setShaderColor((color >> 16 & 0xff) / 255f, (color >> 8 & 0xff) / 255f, (color & 0xff) / 255f, 1);
+
+        // Edge case spaghetti
+
+        // Render the start and end pieces
+        if (xOffset == 0) {
+            // No x-offset: We render up and down connectors
+            var vOffset = yOffset < 0 ? -2 : 2;
+            context.drawTexture(cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20);
+            context.drawTexture(cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20);
+        } else if (xOffset > 0) {
+            // Positive x-offset: We render left and right connectors
+            context.drawTexture(cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20);
+            context.drawTexture(cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20);
+        } else {
+            // Negative x-offset: We render left and right connectors, but different
+            context.drawTexture(cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20);
+            context.drawTexture(cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20);
+        }
+
+        // If the x-offset isn't zero we render the horizontal paths
         if (xOffset > 0) {
-            bufferBuilder.vertex(matrix, x2, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y2, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x2, y2, 0).color(color).next();
-        } else {
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x2 + 4, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x2 + 4, y2, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y2, 0).color(color).next();
+            context.drawTexture(horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4);
+            context.drawTexture(horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4);
+        } else if (xOffset != 0) {
+            context.drawTexture(horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4);
+            context.drawTexture(horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4);
         }
 
-        if (yOffset < 0) {
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y2 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y1 + 4, 0).color(color).next();
+        // Render the vertical path
+        if (yOffset == 0) {
+            // Special case, not y-offset: render a horizontal square
+            context.drawTexture(horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4);
+        } else if (yOffset > 0) {
+            context.drawTexture(verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4);
         } else {
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y1, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y2, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y2, 0).color(color).next();
+            context.drawTexture(verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4);
         }
 
-        if (xOffset > 0) {
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y1 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1, y1 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1, y1, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f, y1, 0).color(color).next();
-        } else {
-            bufferBuilder.vertex(matrix, x1, y1 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1 + 4, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1 - xOffset / 2f + 4, y1, 0).color(color).next();
-            bufferBuilder.vertex(matrix, x1, y1, 0).color(color).next();
+        // Render corners. If the either offset is zero then there are no corners
+        if (xOffset != 0 && yOffset != 0) {
+            if (yOffset < 0) {
+                // Select which set of corners to use
+                var cornerU = xOffset < 0 ? 4 : 0;
+                if (yOffset == -1) {
+                    // Special case: short y-offsets have special textures
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20);
+                } else if (yOffset == -2) {
+                    // Special case: short y-offsets have special textures
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20);
+                } else {
+                    // Normal case: render corners (one pixel of overlap works fine with the textures)
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20);
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20);
+                }
+            } else {
+                // Select which set of corners to use
+                var cornerU = xOffset < 0 ? 0 : 4;
+                if (yOffset == 1) {
+                    // Special case: short y-offsets have special textures
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20);
+                } else if (yOffset == 2) {
+                    // Special case: short y-offsets have special textures
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20);
+                } else {
+                    // Normal case: render corners (one pixel of overlap works fine with the textures)
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20);
+                    context.drawTexture(cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20);
+                }
+            }
         }
+
+        RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 }

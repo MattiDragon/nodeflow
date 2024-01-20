@@ -5,7 +5,6 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.navigation.GuiNavigation;
 import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -207,13 +206,13 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             child.render(context, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
         }
 
-        renderExtras(matrices, mouseX, mouseY, delta);
+        renderExtras(context, mouseX, mouseY, delta);
 
         matrices.pop();
         context.disableScissor();
     }
 
-    protected void renderExtras(MatrixStack matrices, int mouseX, int mouseY, float delta) {}
+    protected void renderExtras(DrawContext matrices, int mouseX, int mouseY, float delta) {}
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
