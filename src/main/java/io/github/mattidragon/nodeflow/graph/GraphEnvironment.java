@@ -5,19 +5,27 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
 
 /**
  * Contains info about an environment in which graphs exist. For most use cases there should only be need for a single environment per system using nodeflow, but if you, for example, would like some nodes to unlockable as part of you mods progressions you can make a new environment for each usage.
- * @param allowedNodeTypes The list of allowed types of nodes. Do not use the entire registry here; other mods might add nodes you can't provide context for.
  * @param allowedDataTypes The list of allowed data types. Do not use the entire registry here; other mods might add their own data types that aren't obtainable in your graph. Used by nodes with configurable inputs and outputs to know possible data types.
  * @param availableContexts The list of contexts available to graphs in this environment
  * @param groups A list of groups nodes should be put in. Nodes without a group will be placed in a 'misc' group.
  */
 public record GraphEnvironment(List<DataType<?>> allowedDataTypes, List<ContextType<?>> availableContexts, List<NodeGroup> groups) {
+    public static final PacketCodec<RegistryByteBuf, GraphEnvironment> PACKET_CODEC = PacketCodec.tuple(
+            PacketCodecs.registryValue(DataType.REGISTRY.getKey()).collect(PacketCodecs.toList()), GraphEnvironment::allowedDataTypes,
+            PacketCodecs.registryValue(ContextType.KEY).collect(PacketCodecs.toList()), GraphEnvironment::availableContexts,
+            NodeGroup.CODEC.collect(PacketCodecs.toList()), GraphEnvironment::groups,
+            GraphEnvironment::new
+    );
+    
     /**
      * Creates a graph environment, removing nodes that don't match the required types and contexts.
      */
@@ -30,22 +38,6 @@ public record GraphEnvironment(List<DataType<?>> allowedDataTypes, List<ContextT
 
     public boolean isAllowedNodeType(NodeType<?> type) {
         return groups.stream().map(NodeGroup::getTypes).flatMap(List::stream).anyMatch(type::equals);
-    }
-
-    public void toPacket(PacketByteBuf buf) {
-        buf.writeCollection(allowedDataTypes.stream().map(DataType.REGISTRY::getId).toList(), PacketByteBuf::writeIdentifier);
-        buf.writeCollection(availableContexts.stream().map(ContextType.REGISTRY::getId).toList(), PacketByteBuf::writeIdentifier);
-        buf.writeCollection(groups, (buf1, group) -> {
-            buf1.writeIdentifier(group.getDecoderId());
-            group.toPacket(buf1);
-        });
-    }
-
-    public static GraphEnvironment fromPacket(PacketByteBuf buf) {
-        var allowedDataTypes = buf.readList(PacketByteBuf::readIdentifier).stream().<DataType<?>>map(DataType.REGISTRY::get).toList();
-        var availableContexts = buf.readList(PacketByteBuf::readIdentifier).stream().<ContextType<?>>map(ContextType.REGISTRY::get).toList();
-        var groups = buf.readList((buf1) -> NodeGroup.DECODERS.get(buf1.readIdentifier()).apply(buf1));
-        return new GraphEnvironment(allowedDataTypes, availableContexts, groups);
     }
 
     public static Builder builder() {

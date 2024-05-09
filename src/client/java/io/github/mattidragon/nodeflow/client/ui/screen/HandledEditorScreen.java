@@ -3,7 +3,6 @@ package io.github.mattidragon.nodeflow.client.ui.screen;
 import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.screen.ingame.ScreenHandlerProvider;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.NbtCompound;
@@ -28,13 +27,9 @@ public class HandledEditorScreen extends EditorScreen implements ScreenHandlerPr
 
     @Override
     public void syncGraph() {
-        var buf = PacketByteBufs.create();
         var nbt = new NbtCompound();
         graph.writeNbt(nbt);
-        buf.writeNbt(nbt);
-        buf.writeByte(this.handler.syncId);
-
-        ClientPlayNetworking.send(GraphSyncPacket.GRAPH_SYNC_ID, buf);
+        ClientPlayNetworking.send(new GraphSyncPacket(nbt, (byte) handler.syncId));
     }
 
     @Override

@@ -122,7 +122,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
             var focused = (T) getFocused();
             // If the node was deleted due to the click we don't want to add it back
             if (children.remove(focused)) {
-                children.add(0, focused);
+                children.addFirst(focused);
             }
         } else {
             setFocused(null);

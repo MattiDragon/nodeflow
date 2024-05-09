@@ -2,17 +2,13 @@ package io.github.mattidragon.nodeflow.screen;
 
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.Graph;
-import io.github.mattidragon.nodeflow.graph.GraphEnvironment;
 import io.github.mattidragon.nodeflow.misc.GraphProvider;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import org.jetbrains.annotations.ApiStatus;
-
-import java.util.Objects;
 
 public class EditorScreenHandler extends ScreenHandler {
     public final Graph graph;
@@ -35,13 +31,12 @@ public class EditorScreenHandler extends ScreenHandler {
      * Used to create a screen handler on the client. There shouldn't really be any reason for you to use this, but it's internally needed.
      * @param syncId The sync id of this screen handler, should be provided by minecraft for you.
      * @param inv Ignored. Exist for convenient lambda usage.
-     * @param buf The byte buffer with the graph data from the server.
+     * @param graph The graph that the screen will be editing.
      */
     @ApiStatus.Internal
-    public EditorScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
+    public EditorScreenHandler(int syncId, PlayerInventory inv, Graph graph) {
         super(NodeFlow.SCREEN_HANDLER, syncId);
-        this.graph = new Graph(GraphEnvironment.fromPacket(buf));
-        graph.readNbt(Objects.requireNonNull(buf.readNbt()));
+        this.graph = graph;
         context = ScreenHandlerContext.EMPTY;
     }
 

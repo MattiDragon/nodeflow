@@ -3,6 +3,7 @@ package io.github.mattidragon.nodeflow.graph.node.group;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.text.Text;
@@ -17,10 +18,8 @@ import java.util.stream.StreamSupport;
  */
 public record TagNodeGroup(TagKey<NodeType<?>> tag) implements NodeGroup {
     public static final Identifier DECODER_ID = NodeFlow.id("tag");
-
-    public TagNodeGroup(PacketByteBuf buf) {
-        this(TagKey.of(NodeType.KEY, buf.readIdentifier()));
-    }
+    public static final PacketCodec<PacketByteBuf, TagNodeGroup> CODEC = 
+            PacketCodec.tuple(Identifier.PACKET_CODEC.xmap(id -> TagKey.of(NodeType.KEY, id), TagKey::id), TagNodeGroup::tag, TagNodeGroup::new);
 
     @Override
     public Text getName() {
@@ -35,12 +34,7 @@ public record TagNodeGroup(TagKey<NodeType<?>> tag) implements NodeGroup {
     }
 
     @Override
-    public Identifier getDecoderId() {
+    public Identifier getCodecId() {
         return DECODER_ID;
-    }
-
-    @Override
-    public void toPacket(PacketByteBuf buf) {
-        buf.writeIdentifier(tag.id());
     }
 }

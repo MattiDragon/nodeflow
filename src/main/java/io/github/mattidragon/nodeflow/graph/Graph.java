@@ -11,6 +11,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -20,6 +22,19 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Graph {
+    public static final PacketCodec<RegistryByteBuf, Graph> PACKET_CODEC =
+            PacketCodec.ofStatic((buf, graph) -> {
+                GraphEnvironment.PACKET_CODEC.encode(buf, graph.env);
+                var nbt = new NbtCompound();
+                graph.writeNbt(nbt);
+                buf.writeNbt(nbt);
+            }, buf -> {
+                var environment = GraphEnvironment.PACKET_CODEC.decode(buf);
+                var graph = new Graph(environment);
+                graph.readNbt(Objects.requireNonNull(buf.readNbt(), "Missing nbt in packet"));
+                return graph;
+            });
+    
     private final Map<UUID, Node> nodes = new LinkedHashMap<>();
     private final Set<Connection> connections = new LinkedHashSet<>();
     public final GraphEnvironment env;
@@ -207,7 +222,7 @@ public class Graph {
         for (Node node : nodes.values()) {
             var errors = node.validate();
             if (!errors.isEmpty()) {
-                return List.of(EvaluationError.Type.INVALID_CONFIG.error(errors.get(0).copy().formatted(Formatting.YELLOW)));
+                return List.of(EvaluationError.Type.INVALID_CONFIG.error(errors.getFirst().copy().formatted(Formatting.YELLOW)));
             }
         }
 

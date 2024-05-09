@@ -1,5 +1,6 @@
 package io.github.mattidragon.nodeflow;
 
+import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
@@ -20,7 +21,7 @@ public class NodeFlow implements ModInitializer {
     public static final String MOD_ID = "nodeflow";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public static final ExtendedScreenHandlerType<EditorScreenHandler> SCREEN_HANDLER = new ExtendedScreenHandlerType<>(EditorScreenHandler::new);
+    public static final ExtendedScreenHandlerType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedScreenHandlerType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
 
     public static Identifier id(String path) {
         return new Identifier(MOD_ID, path);
@@ -33,8 +34,8 @@ public class NodeFlow implements ModInitializer {
         NodeType.register();
         DataType.register();
         ContextType.register();
-
-        NodeGroup.registerDecoder(TagNodeGroup.DECODER_ID, TagNodeGroup::new);
-        NodeGroup.registerDecoder(DirectNodeGroup.DECODER_ID, DirectNodeGroup::new);
+        
+        NodeGroup.registerCodec(TagNodeGroup.DECODER_ID, TagNodeGroup.CODEC);
+        NodeGroup.registerCodec(DirectNodeGroup.DECODER_ID, DirectNodeGroup.CODEC);
     }
 }

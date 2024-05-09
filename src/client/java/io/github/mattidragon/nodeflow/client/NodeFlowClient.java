@@ -39,7 +39,7 @@ public class NodeFlowClient implements ClientModInitializer {
         HandledScreens.<EditorScreenHandler, HandledEditorScreen>register(NodeFlow.SCREEN_HANDLER, HandledEditorScreen::new);
         ControlifyProxy.INSTANCE.register();
         NodeConfigScreenRegistry.registerDefaults();
-        NodeGroup.registerDecoder(ClientTagNodeGroup.DECODER_ID, ClientTagNodeGroup::new);
+        NodeGroup.registerCodec(ClientTagNodeGroup.DECODER_ID, ClientTagNodeGroup.CODEC);
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             var debugEditorKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.nodeflow.debug", GLFW.GLFW_KEY_K, "key.categories.nodeflow"));
@@ -61,18 +61,23 @@ public class NodeFlowClient implements ClientModInitializer {
 
                 while (devKey.wasPressed()) {
                     var screen = new Screen(Text.literal("Test Zoom Areas")) {
+                        private ZoomableAreaWidget<ButtonWidget> widget;
+
                         @Override
                         protected void init() {
                             super.init();
-                            var widget = addDrawableChild(new ZoomableAreaWidget<ButtonWidget>(64, 64, width - 128, height - 128));
+                            widget = addDrawableChild(new ZoomableAreaWidget<>(64, 64, width - 128, height - 128));
 
                             widget.add(ButtonWidget.builder(Text.literal("1"), button -> System.out.println("1")).dimensions(0, 0, 20, 20).build());
                             widget.add(ButtonWidget.builder(Text.literal("2"), button -> System.out.println("2")).dimensions(0, 30, 20, 20).build());
                             widget.add(ButtonWidget.builder(Text.literal("3"), button -> System.out.println("3")).dimensions(30, 0, 20, 20).build());
 
                             //addDrawableChild(new ButtonWidget(0, 0, 20, 20, Text.literal("+"), button -> {}));
+                        }
 
-                            focusOn(widget);
+                        @Override
+                        protected void setInitialFocus() {
+                            setInitialFocus(widget);
                         }
                     };
                     client.setScreen(screen);

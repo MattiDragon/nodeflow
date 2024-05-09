@@ -4,12 +4,11 @@ import dev.isxander.controlify.Controlify;
 import dev.isxander.controlify.api.bind.BindingSupplier;
 import dev.isxander.controlify.api.buttonguide.ButtonGuideApi;
 import dev.isxander.controlify.api.buttonguide.ButtonGuidePredicate;
-import dev.isxander.controlify.api.buttonguide.ButtonRenderPosition;
 import dev.isxander.controlify.bindings.BindContext;
 import dev.isxander.controlify.bindings.BindContexts;
 import dev.isxander.controlify.bindings.ControllerBindings;
-import dev.isxander.controlify.bindings.GamepadBinds;
-import dev.isxander.controlify.controller.Controller;
+import dev.isxander.controlify.controller.ControllerEntity;
+import dev.isxander.controlify.controller.input.GamepadInputs;
 import dev.isxander.controlify.screenop.ScreenProcessor;
 import dev.isxander.controlify.screenop.ScreenProcessorProvider;
 import dev.isxander.controlify.virtualmouse.VirtualMouseHandler;
@@ -36,19 +35,19 @@ public class ControlifyPlugin implements ControlifyProxy {
         registerScreenType(EditorScreen.class);
         registerScreenType(HandledEditorScreen.class);
         editorUpKey = ControllerBindings.Api.INSTANCE.registerBind(NodeFlow.id("editor_up"), builder ->
-                builder.defaultBind(GamepadBinds.RIGHT_STICK_FORWARD)
+                builder.defaultBind(GamepadInputs.getBind(GamepadInputs.RIGHT_STICK_AXIS_UP))
                         .category(NODEFLOW_CATEGORY)
                         .context(BIND_CONTEXT));
         editorDownKey = ControllerBindings.Api.INSTANCE.registerBind(NodeFlow.id("editor_down"), builder ->
-                builder.defaultBind(GamepadBinds.RIGHT_STICK_BACKWARD)
+                builder.defaultBind(GamepadInputs.getBind(GamepadInputs.RIGHT_STICK_AXIS_DOWN))
                         .category(NODEFLOW_CATEGORY)
                         .context(BIND_CONTEXT));
         editorLeftKey = ControllerBindings.Api.INSTANCE.registerBind(NodeFlow.id("editor_left"), builder ->
-                builder.defaultBind(GamepadBinds.RIGHT_STICK_LEFT)
+                builder.defaultBind(GamepadInputs.getBind(GamepadInputs.RIGHT_STICK_AXIS_LEFT))
                         .category(NODEFLOW_CATEGORY)
                         .context(BIND_CONTEXT));
         editorRightKey = ControllerBindings.Api.INSTANCE.registerBind(NodeFlow.id("editor_right"), builder ->
-                builder.defaultBind(GamepadBinds.RIGHT_STICK_RIGHT)
+                builder.defaultBind(GamepadInputs.getBind(GamepadInputs.RIGHT_STICK_AXIS_RIGHT))
                         .category(NODEFLOW_CATEGORY)
                         .context(BIND_CONTEXT));
     }
@@ -68,13 +67,13 @@ public class ControlifyPlugin implements ControlifyProxy {
             super.onWidgetRebuild();
             ButtonGuidePredicate<ButtonWidget> predicate = button -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
 
-            ButtonGuideApi.addGuideToButton(screen.plusButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_1, ButtonRenderPosition.TEXT, predicate);
-            ButtonGuideApi.addGuideToButton(screen.deleteButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_2, ButtonRenderPosition.TEXT, predicate);
-            ButtonGuideApi.addGuideToButton(screen.backButton, controller -> controller.bindings().GUI_BACK, ButtonRenderPosition.TEXT, predicate);
+            ButtonGuideApi.addGuideToButton(screen.plusButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_1, predicate);
+            ButtonGuideApi.addGuideToButton(screen.deleteButton, controller -> controller.bindings().GUI_ABSTRACT_ACTION_2, predicate);
+            ButtonGuideApi.addGuideToButton(screen.backButton, controller -> controller.bindings().GUI_BACK, predicate);
         }
 
         @Override
-        protected void handleButtons(Controller<?, ?> controller) {
+        protected void handleButtons(ControllerEntity controller) {
             if (screen.plusButton.active && controller.bindings().GUI_ABSTRACT_ACTION_1.justPressed()) screen.plusButton.onPress();
             if (screen.deleteButton.active && controller.bindings().GUI_ABSTRACT_ACTION_2.justPressed()) screen.deleteButton.onPress();
             if (controller.bindings().GUI_BACK.justPressed()) {
@@ -96,7 +95,7 @@ public class ControlifyPlugin implements ControlifyProxy {
         }
 
         @Override
-        protected void handleScreenVMouse(Controller<?, ?> controller, VirtualMouseHandler vmouse) {
+        protected void handleScreenVMouse(ControllerEntity controller, VirtualMouseHandler vmouse) {
             var area = screen.getArea();
             var impulseX = editorRightKey.onController(controller).state() - editorLeftKey.onController(controller).state();
             var impulseY = editorDownKey.onController(controller).state() - editorUpKey.onController(controller).state();

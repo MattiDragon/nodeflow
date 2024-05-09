@@ -383,7 +383,6 @@ public class EditorScreen extends Screen {
     private static class AddNodesWidget extends ElementListWidget<AddNodesWidget.Entry> {
         public AddNodesWidget(MinecraftClient client, int width, int height, int y) {
             super(client, width, height, y, 30);
-            setRenderBackground(false);
             centerListVertically = true;
             setX(GRID_OFFSET);
         }
@@ -399,6 +398,16 @@ public class EditorScreen extends Screen {
         }
 
         @Override
+        protected void drawHeaderAndFooterSeparators(DrawContext context) {
+            // Overridden to disable background
+        }
+        
+        @Override
+        protected void drawMenuListBackground(DrawContext context) {
+            // Overridden to disable background
+        }
+
+        @Override
         public int getRowWidth() {
             return getButtonCount() * 110 - 10;
         }
@@ -408,7 +417,7 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPositionX() {
+        protected int getScrollbarX() {
             return (width / 2) + (getRowWidth() / 2) + GRID_OFFSET + 10;
         }
 

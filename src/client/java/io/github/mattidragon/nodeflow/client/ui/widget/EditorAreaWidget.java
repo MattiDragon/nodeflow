@@ -22,7 +22,9 @@ import org.lwjgl.glfw.GLFW;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Base64;
+import java.util.Objects;
+import java.util.UUID;
 
 public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     private static final String CLIPBOARD_PREFIX = "nodeflow-node-v1:";
