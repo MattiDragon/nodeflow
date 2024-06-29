@@ -21,16 +21,15 @@ public class Context {
         return new Builder();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T get(ContextType<T> type) {
         if (map.containsKey(type))
             // Only valid pairs can be inserted
-            // noinspection unchecked
             return (T) map.get(type);
 
         for (var entry : map.entrySet()) {
             if (ArrayUtils.contains(entry.getKey().parents(), type))
                 // Only valid pairs can be inserted
-                // noinspection unchecked
                 return (T) entry.getValue();
         }
         throw new NoSuchElementException("Missing graph context: " + type);

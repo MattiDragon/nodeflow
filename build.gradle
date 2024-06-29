@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.7-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -14,7 +14,12 @@ repositories {
     maven { url = "https://maven.isxander.dev/releases" }
     maven { url = "https://maven.isxander.dev/snapshots" }
     maven { url = "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url = "https://jitpack.io" }
+    maven { 
+        url = "https://jitpack.io"
+        content {
+            includeGroupByRegex("com\\.github\\..*")
+        }
+    }
 }
 
 loom.splitEnvironmentSourceSets()
@@ -24,7 +29,7 @@ dependencies {
     mappings "net.fabricmc:yarn:$yarn_mappings:v2"
     modImplementation "net.fabricmc:fabric-loader:$loader_version"
 
-    modCompileOnly /*modLocalRuntime*/("dev.isxander:controlify:$controllify_version") {
+    modCompileOnly modLocalRuntime("dev.isxander:controlify:$controlify_version") {
         exclude group: "maven.modrinth", module: "sodium"
         exclude group: "maven.modrinth", module: "iris"
         exclude group: "maven.modrinth", module: "immediatelyfast"

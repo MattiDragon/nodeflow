@@ -149,7 +149,7 @@ public class Graph {
         nodes.clear();
         for (var element : data.getList("nodes", NbtElement.COMPOUND_TYPE)) {
             var nodeNbt = (NbtCompound) element;
-            var type = NodeType.REGISTRY.getOrEmpty(new Identifier(nodeNbt.getString("type")));
+            var type = NodeType.REGISTRY.getOrEmpty(Identifier.tryParse(nodeNbt.getString("type")));
             if (type.isEmpty()) {
                 NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", nodeNbt.getString("type"));
                 // uuid getter isn't safe

@@ -24,7 +24,7 @@ public class NodeFlow implements ModInitializer {
     public static final ExtendedScreenHandlerType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedScreenHandlerType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
 
     public static Identifier id(String path) {
-        return new Identifier(MOD_ID, path);
+        return Identifier.of(MOD_ID, path);
     }
 
     @Override

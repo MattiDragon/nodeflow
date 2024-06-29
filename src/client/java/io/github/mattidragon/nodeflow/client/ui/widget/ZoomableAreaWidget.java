@@ -118,7 +118,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         */
         if (super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button)) {
             // Only children should be able to get focused
-            //noinspection unchecked
+            @SuppressWarnings("unchecked") 
             var focused = (T) getFocused();
             // If the node was deleted due to the click we don't want to add it back
             if (children.remove(focused)) {

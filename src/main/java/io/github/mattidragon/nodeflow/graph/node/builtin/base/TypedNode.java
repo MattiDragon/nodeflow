@@ -28,7 +28,7 @@ public abstract class TypedNode extends Node {
     @Override
     public void readNbt(NbtCompound data) {
         super.readNbt(data);
-        type = DataType.REGISTRY.get(new Identifier(data.getString("data_type")));
+        type = DataType.REGISTRY.get(Identifier.of(data.getString("data_type")));
     }
 
     @Override

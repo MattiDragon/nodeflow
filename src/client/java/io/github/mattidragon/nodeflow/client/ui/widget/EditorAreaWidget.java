@@ -130,11 +130,11 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             return;
         }
 
-        if (!nbt.contains("type", NbtElement.STRING_TYPE) || !Identifier.isValid(nbt.getString("type"))) {
+        if (!nbt.contains("type", NbtElement.STRING_TYPE) || !Identifier.validate(nbt.getString("type")).isSuccess()) {
             NodeFlow.LOGGER.warn("Failed to paste node, invalid type");
             return;
         }
-        var node = NodeType.REGISTRY.get(new Identifier(nbt.getString("type"))).generator().apply(parent.graph);
+        var node = NodeType.REGISTRY.get(Identifier.tryParse(nbt.getString("type"))).generator().apply(parent.graph);
         node.readNbt(nbt);
         node.guiX = (int) modifyX(mouseX);
         node.guiY = (int) modifyY(mouseY);
