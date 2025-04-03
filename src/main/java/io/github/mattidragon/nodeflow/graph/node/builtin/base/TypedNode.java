@@ -15,6 +15,12 @@ public abstract class TypedNode extends Node {
 
     protected TypedNode(NodeType<?> type, List<ContextType<?>> contexts, Graph graph) {
         super(type, contexts, graph);
+        this.type = getDefaultType();
+    }
+
+    protected DataType<?> getDefaultType() {
+        var allowedDataTypes = this.graph.env.allowedDataTypes();
+        return allowedDataTypes.contains(DataType.NUMBER) || allowedDataTypes.isEmpty() ? DataType.NUMBER : allowedDataTypes.getFirst();
     }
 
     public DataType<?> getType() {
@@ -28,7 +34,7 @@ public abstract class TypedNode extends Node {
     @Override
     public void readNbt(NbtCompound data) {
         super.readNbt(data);
-        type = DataType.REGISTRY.get(Identifier.of(data.getString("data_type")));
+        type = data.get("data_type", DataType.REGISTRY.getCodec()).orElseGet(this::getDefaultType);
     }
 
     @Override
@@ -36,5 +42,4 @@ public abstract class TypedNode extends Node {
         super.writeNbt(data);
         data.putString("data_type", DataType.REGISTRY.getId(type).toString());
     }
-
 }

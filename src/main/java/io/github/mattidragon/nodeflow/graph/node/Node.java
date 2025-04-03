@@ -9,6 +9,7 @@ import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Uuids;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -68,18 +69,16 @@ public abstract class Node {
     }
 
     public void readNbt(NbtCompound data) {
-        if (data.containsUuid("id")) // Default to old/random
-            id = data.getUuid("id");
-        guiX = data.getInt("guiX");
-        guiY = data.getInt("guiY");
-        tag = NodeTag.fromString(data.getString("tag"));
-        if (data.contains("nickname"))
-            nickname = data.getString("nickname");
+        data.get("id", Uuids.CODEC).ifPresent(newId -> id = newId);
+        guiX = data.getInt("guiX", 0);
+        guiY = data.getInt("guiY", 0);
+        tag = NodeTag.fromString(data.getString("tag", ""));
+        nickname = data.getString("nickname", nickname);
     }
 
     public void writeNbt(NbtCompound data) {
         data.putString("type", NodeType.REGISTRY.getId(type).toString());
-        data.putUuid("id", id);
+        data.put("id", Uuids.CODEC, id);
         data.putInt("guiX", guiX);
         data.putInt("guiY", guiY);
         data.putString("tag", tag.asString());

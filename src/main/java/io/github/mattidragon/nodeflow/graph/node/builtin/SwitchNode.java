@@ -14,8 +14,6 @@ import java.util.List;
 public class SwitchNode extends TypedNode {
     public SwitchNode(Graph graph) {
         super(NodeType.SWITCH, List.of(), graph);
-        var allowedDataTypes = graph.env.allowedDataTypes();
-        type = allowedDataTypes.contains(DataType.NUMBER) || allowedDataTypes.isEmpty() ? DataType.NUMBER : allowedDataTypes.get(0);
     }
 
     @Override

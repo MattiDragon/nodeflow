@@ -18,6 +18,7 @@ import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
@@ -137,7 +138,7 @@ public class EditorScreen extends Screen {
             entries.add(new AddNodesWidget.Entry(currentButtons));
         }
         addMenu.replaceEntries(entries);
-        addMenu.setScrollAmount(0);
+        addMenu.setScrollY(0);
     }
 
     public void syncGraph() {}
@@ -363,7 +364,7 @@ public class EditorScreen extends Screen {
 
     private void renderArea(DrawContext context) {
         var texture = area.isFocused() && client != null && client.getNavigationType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
-        context.drawGuiTexture(texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
+        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
     }
 
     public boolean isDeletingNode() {
@@ -401,7 +402,7 @@ public class EditorScreen extends Screen {
         protected void drawHeaderAndFooterSeparators(DrawContext context) {
             // Overridden to disable background
         }
-        
+
         @Override
         protected void drawMenuListBackground(DrawContext context) {
             // Overridden to disable background

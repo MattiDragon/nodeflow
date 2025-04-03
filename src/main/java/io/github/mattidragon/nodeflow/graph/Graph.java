@@ -16,6 +16,7 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Uuids;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -140,28 +141,26 @@ public class Graph {
                 })
                 .collect(Collectors.toCollection(NbtList::new)));
 
-        data.put("connections", connections.stream().map(Connection::toNbt).collect(Collectors.toCollection(NbtList::new)));
+        data.put("connections", Connection.CODEC.listOf(), List.copyOf(connections));
     }
 
     public void readNbt(NbtCompound data) {
         var ignoredIds = new ArrayList<UUID>();
 
         nodes.clear();
-        for (var element : data.getList("nodes", NbtElement.COMPOUND_TYPE)) {
-            var nodeNbt = (NbtCompound) element;
-            var type = NodeType.REGISTRY.getOrEmpty(Identifier.tryParse(nodeNbt.getString("type")));
+        for (var element : data.getList("nodes").orElseGet(NbtList::new)) {
+            if (!(element instanceof NbtCompound nodeNbt)) continue;
+            var type = nodeNbt.getString("type")
+                    .flatMap(s -> Optional.ofNullable(Identifier.tryParse(s)))
+                    .flatMap(NodeType.REGISTRY::getOptionalValue);
             if (type.isEmpty()) {
                 NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", nodeNbt.getString("type"));
-                // uuid getter isn't safe
-                if (nodeNbt.containsUuid("id"))
-                    ignoredIds.add(nodeNbt.getUuid("id"));
+                nodeNbt.get("id", Uuids.CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             if (!env.isAllowedNodeType(type.get())) {
                 NodeFlow.LOGGER.warn("Unsupported node type: {}. Ignoring node", nodeNbt.getString("type"));
-                // uuid getter isn't safe
-                if (nodeNbt.containsUuid("id"))
-                    ignoredIds.add(nodeNbt.getUuid("id"));
+                nodeNbt.get("id", Uuids.CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             var node = type.get().generator().apply(this);
@@ -170,11 +169,8 @@ public class Graph {
         }
 
         connections.clear();
-        for (var element : data.getList("connections", NbtElement.COMPOUND_TYPE)) {
-            var connection = Connection.fromNbt((NbtCompound) element);
-            if (connection == null) {
-                NodeFlow.LOGGER.warn("Found malformed connection data. Removing");
-            } else if (validateConnection(connection, ignoredIds)) {
+        for (var connection : data.get("connections", Connection.CODEC.listOf()).orElse(List.of())) {
+            if (validateConnection(connection, ignoredIds)) {
                 connections.add(connection);
             }
         }

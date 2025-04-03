@@ -60,7 +60,7 @@ public class NumberNode extends Node {
     @Override
     public void readNbt(NbtCompound data) {
         super.readNbt(data);
-        value = data.getString("value");
+        value = data.getString("value", "");
     }
 
     @Override

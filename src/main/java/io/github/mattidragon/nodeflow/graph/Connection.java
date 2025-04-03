@@ -1,26 +1,18 @@
 package io.github.mattidragon.nodeflow.graph;
 
-import net.minecraft.nbt.NbtCompound;
-import org.jetbrains.annotations.Nullable;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.util.Uuids;
 
 import java.util.UUID;
 
 public record Connection(UUID targetUuid, String targetName, UUID sourceUuid, String sourceName) {
-    @Nullable
-    public static Connection fromNbt(NbtCompound data) {
-        if (data.containsUuid("inputUuid") && data.containsUuid("outputUuid"))
-            return new Connection(data.getUuid("inputUuid"), data.getString("inputName"), data.getUuid("outputUuid"), data.getString("outputName"));
-        return null;
-    }
-
-    public NbtCompound toNbt() {
-        var nbt = new NbtCompound();
-        nbt.putUuid("inputUuid", targetUuid);
-        nbt.putString("inputName", targetName);
-        nbt.putUuid("outputUuid", sourceUuid);
-        nbt.putString("outputName", sourceName);
-        return nbt;
-    }
+    public static final Codec<Connection> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Uuids.CODEC.fieldOf("inputUuid").forGetter(Connection::targetUuid),
+            Codec.STRING.fieldOf("inputName").forGetter(Connection::targetName),
+            Uuids.CODEC.fieldOf("outputUuid").forGetter(Connection::sourceUuid),
+            Codec.STRING.fieldOf("outputName").forGetter(Connection::sourceName)
+    ).apply(instance, Connection::new));
 
     public Connector<?> getTargetConnector(Graph graph) {
         for (var input : graph.getNode(targetUuid).getInputs()) {

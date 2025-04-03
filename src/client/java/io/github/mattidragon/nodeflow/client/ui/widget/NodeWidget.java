@@ -17,6 +17,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.input.KeyCodes;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
@@ -175,23 +176,24 @@ public class NodeWidget extends ClickableWidget {
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
         RenderSystem.setShaderColor((tagColor >> 16 & 0xff) / 256f, (tagColor >> 8 & 0xff) / 256f, (tagColor & 0xff) / 256f, 1);
-        context.drawGuiTexture(texture, getX(), getY(), width, height);
+        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, getX(), getY(), width, height);
         RenderSystem.setShaderColor(1, 1, 1, 1);
 
+        var color = 0xffffffff;
         // Status indicator / config button
         if (!node.isFullyConnected())
-            context.setShaderColor(1, 2 / 3f, 1 / 3f, 1);
+            //context.setShaderColor(1, 2 / 3f, 1 / 3f, 1);
+            color = 0xffffaa55;
         if (!node.validate().isEmpty())
-            context.setShaderColor(1, 2 / 3f, 1 / 3f, 1);
+            color = 0xffffaa55;
         if (NodeConfigScreenRegistry.hasConfig(node) && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20)
-            context.setShaderColor(0.6f, 0.6f, 1, 1);
+            color = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty()) {
-            context.drawGuiTexture(NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16);
+            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
         } else if (NodeConfigScreenRegistry.hasConfig(node)) {
-            context.drawGuiTexture(NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16);
+            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
         }
-        context.setShaderColor(1, 1, 1, 1);
 
         for (var segment : calculateSegments()) {
             segment.render(context, mouseX, mouseY);
@@ -207,11 +209,6 @@ public class NodeWidget extends ClickableWidget {
     @Override
     public Text getMessage() {
         return node.getName();
-    }
-
-    @Override
-    public boolean clicked(double mouseX, double mouseY) {
-        return super.clicked(mouseX, mouseY);
     }
 
     @Nullable
@@ -273,13 +270,12 @@ public class NodeWidget extends ClickableWidget {
 
             var brightness = hasConnectorAt(mouseX, mouseY) ? 2 : 1;
             var color = this.connector.type().color();
-            var red = ((color & 0xff0000) >> 16) / 256f * brightness;
-            var green = ((color & 0x00ff00) >> 8) / 256f * brightness;
-            var blue = (color & 0x0000ff) / 256f * brightness;
+            color = 0xff000000 |
+                    ((color >> 16 & 0xff) * brightness << 16) & 0xff |
+                    ((color >> 8 & 0xff) * brightness << 8) & 0xff |
+                    ((color & 0xff) * brightness) & 0xff;
 
-            context.setShaderColor(red, green, blue, 1);
-            context.drawGuiTexture(NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4);
-            context.setShaderColor(1, 1, 1, 1);
+            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
             if (!isOutput)
                 context.drawText(textRenderer, this.connector.id(), x + 16, y + 2, 0x404040, false);

@@ -116,6 +116,8 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
          We read the focused element and move it to the top.
          This is done here and not when the focus is set because keyboard nav doesn't like the child order changing.
         */
+        // TODO: Everything breaks because super passes these coords to hoveredElement, which applies transforms again
+        // TODO: we might need to reimplement super :irritater:
         if (super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button)) {
             // Only children should be able to get focused
             @SuppressWarnings("unchecked") 
@@ -216,7 +218,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        return active && visible && mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
 
     @Override

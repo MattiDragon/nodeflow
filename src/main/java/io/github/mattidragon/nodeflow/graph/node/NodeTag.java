@@ -24,7 +24,6 @@ public enum NodeTag {
     }
 
     public static NodeTag fromString(String name) {
-        if (name == null) name = "";
         return switch (name) {
             case "red" -> RED;
             case "green" -> GREEN;
@@ -32,7 +31,7 @@ public enum NodeTag {
             case "yellow" -> YELLOW;
             case "aqua" -> AQUA;
             case "purple" -> PURPLE;
-            default -> WHITE;
+            case null, default -> WHITE;
         };
     }
 }
