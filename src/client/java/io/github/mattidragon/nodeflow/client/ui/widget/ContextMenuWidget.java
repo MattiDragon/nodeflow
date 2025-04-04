@@ -173,6 +173,16 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
         return true;
     }
 
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        for (var widget : widgets) {
+            if (widget.isMouseOver(mouseX, mouseY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Nullable
     @Override
     public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {

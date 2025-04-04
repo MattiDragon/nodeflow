@@ -11,7 +11,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A widget that contains other widgets in a zoomable and movable field.
@@ -116,8 +115,6 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
          We read the focused element and move it to the top.
          This is done here and not when the focus is set because keyboard nav doesn't like the child order changing.
         */
-        // TODO: Everything breaks because super passes these coords to hoveredElement, which applies transforms again
-        // TODO: we might need to reimplement super :irritater:
         if (super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button)) {
             // Only children should be able to get focused
             @SuppressWarnings("unchecked") 
@@ -167,11 +164,11 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         return true;
     }
 
-    @Override
-    public Optional<Element> hoveredElement(double mouseX, double mouseY) {
-        if (!isMouseOver(mouseX, mouseY) || !active || !visible) return Optional.empty();
-        return super.hoveredElement(modifyX(mouseX), modifyY(mouseY));
-    }
+//    @Override
+//    public Optional<Element> hoveredElement(double mouseX, double mouseY) {
+//        if (!isMouseOver(mouseX, mouseY) || !active || !visible) return Optional.empty();
+//        return super.hoveredElement(mouseX, mouseY);
+//    }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {

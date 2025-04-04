@@ -1,6 +1,5 @@
 package io.github.mattidragon.nodeflow.client.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
@@ -175,18 +174,15 @@ public class NodeWidget extends ClickableWidget {
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
-        RenderSystem.setShaderColor((tagColor >> 16 & 0xff) / 256f, (tagColor >> 8 & 0xff) / 256f, (tagColor & 0xff) / 256f, 1);
-        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, getX(), getY(), width, height);
-        RenderSystem.setShaderColor(1, 1, 1, 1);
+        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, getX(), getY(), width, height, tagColor | 0xff000000);
 
         var color = 0xffffffff;
         // Status indicator / config button
         if (!node.isFullyConnected())
-            //context.setShaderColor(1, 2 / 3f, 1 / 3f, 1);
             color = 0xffffaa55;
         if (!node.validate().isEmpty())
             color = 0xffffaa55;
-        if (NodeConfigScreenRegistry.hasConfig(node) && mouseX >= getX() + width - 20 && mouseX <= getX() + width - 4 && mouseY >= getY() + 4 && mouseY <= getY() + 20)
+        if (NodeConfigScreenRegistry.hasConfig(node) && isMouseOver(mouseX, mouseY))
             color = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty()) {
@@ -201,6 +197,7 @@ public class NodeWidget extends ClickableWidget {
 
         context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0x404040, false);
 
+        // Used to hide tooltip
         if (!isMouseOnButton(mouseX, mouseY)) {
             hovered = false;
         }
@@ -271,9 +268,9 @@ public class NodeWidget extends ClickableWidget {
             var brightness = hasConnectorAt(mouseX, mouseY) ? 2 : 1;
             var color = this.connector.type().color();
             color = 0xff000000 |
-                    ((color >> 16 & 0xff) * brightness << 16) & 0xff |
-                    ((color >> 8 & 0xff) * brightness << 8) & 0xff |
-                    ((color & 0xff) * brightness) & 0xff;
+                    Math.min((color >> 16 & 0xff) * brightness, 0xff) << 16 |
+                    Math.min((color >> 8 & 0xff) * brightness, 0xff) << 8 |
+                    Math.min((color & 0xff) * brightness, 0xff);
 
             context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
