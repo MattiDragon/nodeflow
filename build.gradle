@@ -17,7 +17,7 @@ repositories {
     maven { 
         url = "https://jitpack.io"
         content {
-            includeGroupByRegex("com\\.github\\..*")
+            includeGroupAndSubgroups("com.github")
         }
     }
 }
@@ -47,7 +47,7 @@ loom {
 
 processResources {
     inputs.property "version", project.version
-    filteringCharset "UTF-8"
+    filteringCharset = "UTF-8"
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version
