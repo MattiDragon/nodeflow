@@ -33,7 +33,6 @@ public class EditorScreenHandler extends ScreenHandler {
      * @param inv Ignored. Exist for convenient lambda usage.
      * @param graph The graph that the screen will be editing.
      */
-    @ApiStatus.Internal
     public EditorScreenHandler(int syncId, PlayerInventory inv, Graph graph) {
         super(NodeFlow.SCREEN_HANDLER, syncId);
         this.graph = graph;
@@ -50,8 +49,6 @@ public class EditorScreenHandler extends ScreenHandler {
     public boolean canUse(PlayerEntity player) {
         return this.context.get((world, pos) -> player.squaredDistanceTo((double)pos.getX() + 0.5, (double)pos.getY() + 0.5, (double)pos.getZ() + 0.5) <= 64.0, true);
     }
-
-
 
     @Override
     public void onClosed(PlayerEntity player) {

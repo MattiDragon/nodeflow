@@ -5,8 +5,8 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 
 import java.util.List;
 
@@ -32,14 +32,14 @@ public abstract class TypedNode extends Node {
     }
 
     @Override
-    public void readNbt(NbtCompound data) {
-        super.readNbt(data);
-        type = data.get("data_type", DataType.REGISTRY.getCodec()).orElseGet(this::getDefaultType);
+    public void readData(ReadView view) {
+        super.readData(view);
+        type = view.read("data_type", DataType.REGISTRY.getCodec()).orElseGet(this::getDefaultType);
     }
 
     @Override
-    public void writeNbt(NbtCompound data) {
-        super.writeNbt(data);
-        data.putString("data_type", DataType.REGISTRY.getId(type).toString());
+    public void writeData(WriteView view) {
+        super.writeData(view);
+        view.putString("data_type", DataType.REGISTRY.getId(type).toString());
     }
 }

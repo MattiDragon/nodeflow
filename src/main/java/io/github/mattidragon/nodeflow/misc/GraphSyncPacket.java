@@ -21,8 +21,8 @@ public record GraphSyncPacket(NbtCompound nbt, byte syncId) implements CustomPay
         PayloadTypeRegistry.playC2S().register(ID, CODEC);
         ServerPlayNetworking.registerGlobalReceiver(ID, (payload, context) -> {
             var player = context.player();
-            if (player.currentScreenHandler.syncId == payload.syncId && player.currentScreenHandler instanceof EditorScreenHandler networking) {
-                networking.graph.readNbt(payload.nbt);
+            if (player.currentScreenHandler.syncId == payload.syncId && player.currentScreenHandler instanceof EditorScreenHandler screenHandler) {
+                screenHandler.graph.readNbt(payload.nbt, player.getWorld().getRegistryManager());
             }
         });
     }

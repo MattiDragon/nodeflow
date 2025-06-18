@@ -7,7 +7,8 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
 
 import java.util.List;
@@ -58,14 +59,14 @@ public class NumberNode extends Node {
     }
 
     @Override
-    public void readNbt(NbtCompound data) {
-        super.readNbt(data);
-        value = data.getString("value", "");
+    public void readData(ReadView view) {
+        super.readData(view);
+        value = view.getString("value", "");
     }
 
     @Override
-    public void writeNbt(NbtCompound data) {
-        super.writeNbt(data);
-        data.putString("value", value);
+    public void writeData(WriteView view) {
+        super.writeData(view);
+        view.putString("value", value);
     }
 }

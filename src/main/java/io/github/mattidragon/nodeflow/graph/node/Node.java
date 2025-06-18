@@ -6,7 +6,8 @@ import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.context.Context;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Uuids;
@@ -68,22 +69,22 @@ public abstract class Node {
         return true;
     }
 
-    public void readNbt(NbtCompound data) {
-        data.get("id", Uuids.CODEC).ifPresent(newId -> id = newId);
-        guiX = data.getInt("guiX", 0);
-        guiY = data.getInt("guiY", 0);
-        tag = NodeTag.fromString(data.getString("tag", ""));
-        nickname = data.getString("nickname", nickname);
+    public void readData(ReadView view) {
+        view.read("id", Uuids.CODEC).ifPresent(newId -> id = newId);
+        guiX = view.getInt("guiX", 0);
+        guiY = view.getInt("guiY", 0);
+        tag = NodeTag.fromString(view.getString("tag", ""));
+        nickname = view.getString("nickname", nickname);
     }
 
-    public void writeNbt(NbtCompound data) {
-        data.putString("type", NodeType.REGISTRY.getId(type).toString());
-        data.put("id", Uuids.CODEC, id);
-        data.putInt("guiX", guiX);
-        data.putInt("guiY", guiY);
-        data.putString("tag", tag.asString());
+    public void writeData(WriteView view) {
+        view.putString("type", NodeType.REGISTRY.getId(type).toString());
+        view.put("id", Uuids.CODEC, id);
+        view.putInt("guiX", guiX);
+        view.putInt("guiY", guiY);
+        view.putString("tag", tag.asString());
         if (nickname != null)
-            data.putString("nickname", nickname);
+            view.putString("nickname", nickname);
     }
 
     public final Text getName() {

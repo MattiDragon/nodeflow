@@ -9,11 +9,17 @@ import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.misc.EvaluationError;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.NbtReadView;
+import net.minecraft.storage.NbtWriteView;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
+import net.minecraft.util.ErrorReporter;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Uuids;
@@ -26,13 +32,11 @@ public class Graph {
     public static final PacketCodec<RegistryByteBuf, Graph> PACKET_CODEC =
             PacketCodec.ofStatic((buf, graph) -> {
                 GraphEnvironment.PACKET_CODEC.encode(buf, graph.env);
-                var nbt = new NbtCompound();
-                graph.writeNbt(nbt);
-                buf.writeNbt(nbt);
+                buf.writeNbt(graph.writeNbt(buf.getRegistryManager()));
             }, buf -> {
                 var environment = GraphEnvironment.PACKET_CODEC.decode(buf);
                 var graph = new Graph(environment);
-                graph.readNbt(Objects.requireNonNull(buf.readNbt(), "Missing nbt in packet"));
+                graph.readNbt(Objects.requireNonNull(buf.readNbt(), "Missing nbt in packet"), buf.getRegistryManager());
                 return graph;
             });
     
@@ -45,10 +49,9 @@ public class Graph {
     }
 
     public Graph copy() {
-        var nbt = new NbtCompound();
-        writeNbt(nbt);
+        var staticRegistries = DynamicRegistryManager.of(Registries.REGISTRIES);
         var graph = new Graph(env);
-        graph.readNbt(nbt);
+        graph.readNbt(writeNbt(staticRegistries), staticRegistries);
         return graph;
     }
 
@@ -132,44 +135,54 @@ public class Graph {
         return Set.of();
     }
 
-    public void writeNbt(NbtCompound data) {
-        data.put("nodes", nodes.values().stream()
-                .map(node -> {
-                    var nbt = new NbtCompound();
-                    node.writeNbt(nbt);
-                    return nbt;
-                })
-                .collect(Collectors.toCollection(NbtList::new)));
-
-        data.put("connections", Connection.CODEC.listOf(), List.copyOf(connections));
+    public NbtCompound writeNbt(RegistryWrapper.WrapperLookup registries) {
+        try (var logging = new ErrorReporter.Logging(() -> "Graph NBT serializer", NodeFlow.LOGGER)) {
+            var view = NbtWriteView.create(logging, registries);
+            writeData(view);
+            return view.getNbt();
+        }
     }
 
-    public void readNbt(NbtCompound data) {
+    public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+        try (var logging = new ErrorReporter.Logging(() -> "Graph NBT deserializer", NodeFlow.LOGGER)) {
+            var view = NbtReadView.create(logging, registries, nbt);
+            readData(view);
+        }
+    }
+
+    public void writeData(WriteView view) {
+        var nodeData = view.getList("nodes");
+        nodes.values().forEach(node -> node.writeData(nodeData.add()));
+
+        view.put("connections", Connection.CODEC.listOf(), List.copyOf(connections));
+    }
+
+    public void readData(ReadView view) {
         var ignoredIds = new ArrayList<UUID>();
 
         nodes.clear();
-        for (var element : data.getList("nodes").orElseGet(NbtList::new)) {
-            if (!(element instanceof NbtCompound nodeNbt)) continue;
-            var type = nodeNbt.getString("type")
-                    .flatMap(s -> Optional.ofNullable(Identifier.tryParse(s)))
+        for (var element : view.getListReadView("nodes")) {
+            var typeString = element.getString("type", "<missing>");
+            var type = element.getOptionalString("type")
+                    .map(Identifier::tryParse)
                     .flatMap(NodeType.REGISTRY::getOptionalValue);
             if (type.isEmpty()) {
-                NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", nodeNbt.getString("type"));
-                nodeNbt.get("id", Uuids.CODEC).ifPresent(ignoredIds::add);
+                NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", typeString);
+                element.read("id", Uuids.CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             if (!env.isAllowedNodeType(type.get())) {
-                NodeFlow.LOGGER.warn("Unsupported node type: {}. Ignoring node", nodeNbt.getString("type"));
-                nodeNbt.get("id", Uuids.CODEC).ifPresent(ignoredIds::add);
+                NodeFlow.LOGGER.warn("Unsupported node type: {}. Ignoring node", typeString);
+                element.read("id", Uuids.CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             var node = type.get().generator().apply(this);
-            node.readNbt(nodeNbt);
+            node.readData(element);
             nodes.put(node.id, node);
         }
 
         connections.clear();
-        for (var connection : data.get("connections", Connection.CODEC.listOf()).orElse(List.of())) {
+        for (var connection : view.read("connections", Connection.CODEC.listOf()).orElse(List.of())) {
             if (validateConnection(connection, ignoredIds)) {
                 connections.add(connection);
             }

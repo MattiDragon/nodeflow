@@ -5,6 +5,7 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.graph.Connection;
+import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +15,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtSizeTracker;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.storage.NbtReadView;
+import net.minecraft.storage.NbtWriteView;
+import net.minecraft.util.ErrorReporter;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -50,15 +56,23 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
             return;
         }
-        var nbt = new NbtCompound();
-        var oldNode = contextMenu.node.node;
-        oldNode.writeNbt(nbt);
 
-        var newNode = oldNode.type.generator().apply(parent.graph);
-        newNode.readNbt(nbt);
-        newNode.id = UUID.randomUUID();
-        newNode.guiX = oldNode.guiX + 10;
-        newNode.guiY = oldNode.guiY + 10;
+        var staticRegistries = DynamicRegistryManager.of(Registries.REGISTRIES);
+
+        Node newNode;
+        try (var logging = new ErrorReporter.Logging(() -> "Node duplication", NodeFlow.LOGGER)) {
+            var oldNode = contextMenu.node.node;
+            var writeView = NbtWriteView.create(logging, staticRegistries);
+            oldNode.writeData(writeView);
+            var nbt = writeView.getNbt();
+
+            newNode = oldNode.type.generator().apply(parent.graph);
+            var readView = NbtReadView.create(logging, staticRegistries, nbt);
+            newNode.readData(readView);
+            newNode.id = UUID.randomUUID();
+            newNode.guiX = oldNode.guiX + 10;
+            newNode.guiY = oldNode.guiY + 10;
+        }
 
         parent.graph.addNode(newNode);
         add(new NodeWidget(newNode, parent));
@@ -71,8 +85,12 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked copy key without clicking node");
             return;
         }
-        var nbt = new NbtCompound();
-        contextMenu.node.node.writeNbt(nbt);
+        NbtCompound nbt;
+        try (var logging = new ErrorReporter.Logging(() -> "Node copying", NodeFlow.LOGGER)) {
+            var writeView = NbtWriteView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES));
+            contextMenu.node.node.writeData(writeView);
+            nbt = writeView.getNbt();
+        }
         nbt.remove("guiX");
         nbt.remove("guiY");
         nbt.remove("id");
@@ -95,8 +113,12 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
             return;
         }
-        var nbt = new NbtCompound();
-        contextMenu.node.node.writeNbt(nbt);
+        NbtCompound nbt;
+        try (var logging = new ErrorReporter.Logging(() -> "Node copying", NodeFlow.LOGGER)) {
+            var writeView = NbtWriteView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES));
+            contextMenu.node.node.writeData(writeView);
+            nbt = writeView.getNbt();
+        }
         nbt.remove("guiX");
         nbt.remove("guiY");
         nbt.remove("id");
@@ -134,7 +156,11 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             return;
         }
         var node = type.get().generator().apply(parent.graph);
-        node.readNbt(nbt);
+        try (var logging = new ErrorReporter.Logging(() -> "Node pasting", NodeFlow.LOGGER)) {
+            var readView = NbtReadView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES), nbt);
+            node.readData(readView);
+        }
+        node.id = UUID.randomUUID();
         node.guiX = (int) modifyX(mouseX);
         node.guiY = (int) modifyY(mouseY);
 

@@ -5,7 +5,8 @@ import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.screen.ingame.ScreenHandlerProvider;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -27,8 +28,7 @@ public class HandledEditorScreen extends EditorScreen implements ScreenHandlerPr
 
     @Override
     public void syncGraph() {
-        var nbt = new NbtCompound();
-        graph.writeNbt(nbt);
+        var nbt = graph.writeNbt(DynamicRegistryManager.of(Registries.REGISTRIES));
         ClientPlayNetworking.send(new GraphSyncPacket(nbt, (byte) handler.syncId));
     }
 
