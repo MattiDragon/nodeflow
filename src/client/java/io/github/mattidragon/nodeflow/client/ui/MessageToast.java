@@ -1,8 +1,8 @@
 package io.github.mattidragon.nodeflow.client.ui;
 
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.toast.Toast;
 import net.minecraft.client.toast.ToastManager;
 import net.minecraft.text.Text;
@@ -29,7 +29,7 @@ public class MessageToast implements Toast {
 
     @Override
     public void draw(DrawContext context, TextRenderer textRenderer, long startTime) {
-        context.drawGuiTexture(RenderLayer::getGuiTextured, TEXTURE, 0, 0, this.getWidth(), this.getHeight());
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, this.getWidth(), this.getHeight());
         var text = textRenderer.wrapLines(title, 140);
         if (text.size() == 1) {
             context.drawText(textRenderer, text.getFirst(), 7, 13, 0xffffffff, false);

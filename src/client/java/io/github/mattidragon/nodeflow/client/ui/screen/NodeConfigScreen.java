@@ -24,7 +24,6 @@ public class NodeConfigScreen<T extends Node> extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
 
         var isGray = new MutableBoolean(false);
@@ -46,18 +45,18 @@ public class NodeConfigScreen<T extends Node> extends Screen {
         context.fill(x - 2, 18, width - 18, height - 18, 0x33ffffff);
 
         if (!texts.isEmpty()) {
-            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.errors"), x, 20, 0xff5555, false);
+            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.errors"), x, 20, 0xffff5555, false);
         } else {
-            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.no_errors"), x, 20, 0x55ff55, false);
+            context.drawText(textRenderer, Text.translatable("node.nodeflow.generic.config.no_errors"), x, 20, 0xff55ff55, false);
         }
 
         for (var text : texts) {
-            context.drawText(textRenderer, text, x, y, 0xffffff, false);
+            context.drawText(textRenderer, text, x, y, 0xffffffff, false);
             y += 9;
         }
 
         var text = Text.translatable("node.nodeflow.generic.config.title", owner.getName());
-        context.drawText(textRenderer, text, (width - 200 - textRenderer.getWidth(text.asOrderedText())) / 2, 10, 0xffffff, false);
+        context.drawText(textRenderer, text, (width - 200 - textRenderer.getWidth(text.asOrderedText())) / 2, 10, 0xffffffff, false);
     }
 
     @Override

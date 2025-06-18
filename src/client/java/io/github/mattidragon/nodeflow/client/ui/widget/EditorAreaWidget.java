@@ -8,9 +8,9 @@ import io.github.mattidragon.nodeflow.graph.Connection;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtSizeTracker;
@@ -298,35 +298,35 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (xOffset == 0) {
             // No x-offset: We render up and down connectors
             var vOffset = yOffset < 0 ? -2 : 2;
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
         } else if (xOffset > 0) {
             // Positive x-offset: We render left and right connectors
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
         } else {
             // Negative x-offset: We render left and right connectors, but different
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
-            context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
         }
 
         // If the x-offset isn't zero we render the horizontal paths
         if (xOffset > 0) {
-            context.drawTexture(RenderLayer::getGuiTextured, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
-            context.drawTexture(RenderLayer::getGuiTextured, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
         } else if (xOffset != 0) {
-            context.drawTexture(RenderLayer::getGuiTextured, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
-            context.drawTexture(RenderLayer::getGuiTextured, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
         }
 
         // Render the vertical path
         if (yOffset == 0) {
             // Special case, not y-offset: render a horizontal square
-            context.drawTexture(RenderLayer::getGuiTextured, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
         } else if (yOffset > 0) {
-            context.drawTexture(RenderLayer::getGuiTextured, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
         } else {
-            context.drawTexture(RenderLayer::getGuiTextured, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
         }
 
         // Render corners. If the either offset is zero then there are no corners
@@ -336,28 +336,28 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 var cornerU = xOffset < 0 ? 4 : 0;
                 if (yOffset == -1) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == -2) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
                 }
             } else {
                 // Select which set of corners to use
                 var cornerU = xOffset < 0 ? 0 : 4;
                 if (yOffset == 1) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == 2) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
-                    context.drawTexture(RenderLayer::getGuiTextured, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
                 }
             }
         }

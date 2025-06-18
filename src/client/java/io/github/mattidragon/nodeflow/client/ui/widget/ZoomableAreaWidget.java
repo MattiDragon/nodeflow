@@ -195,11 +195,11 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         if (!visible) return;
         var matrices = context.getMatrices();
         context.enableScissor(x, y, x + width, y + height);
-        matrices.push();
-        matrices.translate(x, y, 0);
-        matrices.translate(viewX + width / 2.0, viewY + height / 2.0, 0);
+        matrices.pushMatrix();
+        matrices.translate(x, y);
+        matrices.translate((float) (viewX + width / 2.0), (float) (viewY + height / 2.0));
         var scale = getScale();
-        matrices.scale(scale, scale, scale);
+        matrices.scale(scale, scale);
 
         for (var child : Lists.reverse(children)) {
             child.render(context, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
@@ -207,7 +207,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
         renderExtras(context, mouseX, mouseY, delta);
 
-        matrices.pop();
+        matrices.popMatrix();
         context.disableScissor();
     }
 

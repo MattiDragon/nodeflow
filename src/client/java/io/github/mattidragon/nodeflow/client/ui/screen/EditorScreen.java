@@ -9,6 +9,7 @@ import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -18,7 +19,6 @@ import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
@@ -355,16 +355,9 @@ public class EditorScreen extends Screen {
         renderArea(context);
     }
 
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
-
-        super.render(context, mouseX, mouseY, delta);
-    }
-
     private void renderArea(DrawContext context) {
         var texture = area.isFocused() && client != null && client.getNavigationType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
-        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
     }
 
     public boolean isDeletingNode() {

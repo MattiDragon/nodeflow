@@ -8,6 +8,7 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.ScreenRect;
 import net.minecraft.client.gui.navigation.GuiNavigation;
@@ -16,7 +17,6 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.input.KeyCodes;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
@@ -174,7 +174,7 @@ public class NodeWidget extends ClickableWidget {
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
-        context.drawGuiTexture(RenderLayer::getGuiTextured, texture, getX(), getY(), width, height, tagColor | 0xff000000);
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, texture, getX(), getY(), width, height, tagColor | 0xff000000);
 
         var color = 0xffffffff;
         // Status indicator / config button
@@ -186,16 +186,16 @@ public class NodeWidget extends ClickableWidget {
             color = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty()) {
-            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
         } else if (NodeConfigScreenRegistry.hasConfig(node)) {
-            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
         }
 
         for (var segment : calculateSegments()) {
             segment.render(context, mouseX, mouseY);
         }
 
-        context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0x404040, false);
+        context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
 
         // Used to hide tooltip
         if (!isMouseOnButton(mouseX, mouseY)) {
@@ -272,12 +272,12 @@ public class NodeWidget extends ClickableWidget {
                     Math.min((color >> 8 & 0xff) * brightness, 0xff) << 8 |
                     Math.min((color & 0xff) * brightness, 0xff);
 
-            context.drawGuiTexture(RenderLayer::getGuiTextured, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
             if (!isOutput)
-                context.drawText(textRenderer, this.connector.id(), x + 16, y + 2, 0x404040, false);
+                context.drawText(textRenderer, this.connector.id(), x + 16, y + 2, 0xff404040, false);
             else
-                context.drawText(textRenderer, this.connector.id(), x + width - 16 - textRenderer.getWidth(this.connector.id()), y + 2, 0x404040, false);
+                context.drawText(textRenderer, this.connector.id(), x + width - 16 - textRenderer.getWidth(this.connector.id()), y + 2, 0xff404040, false);
         }
     }
 }
