@@ -1,7 +1,8 @@
 package io.github.mattidragon.nodeflow.misc;
 
-import java.util.Locale;
 import net.minecraft.network.chat.Component;
+
+import java.util.Locale;
 
 public record EvaluationError(Type type, Object... data) {
     /**

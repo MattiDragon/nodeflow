@@ -7,8 +7,8 @@ import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 
 public record DataType<T>(int color, boolean splittable) {
     public static final ResourceKey<Registry<DataType<?>>> KEY = ResourceKey.createRegistryKey(NodeFlow.id("data_type"));

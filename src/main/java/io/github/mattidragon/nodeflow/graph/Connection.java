@@ -2,8 +2,10 @@ package io.github.mattidragon.nodeflow.graph;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
+import org.jspecify.annotations.Nullable;
+
+import java.util.UUID;
 
 public record Connection(UUID targetUuid, String targetName, UUID sourceUuid, String sourceName) {
     public static final Codec<Connection> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -13,7 +15,7 @@ public record Connection(UUID targetUuid, String targetName, UUID sourceUuid, St
             Codec.STRING.fieldOf("outputName").forGetter(Connection::sourceName)
     ).apply(instance, Connection::new));
 
-    public Connector<?> getTargetConnector(Graph graph) {
+    public @Nullable Connector<?> getTargetConnector(Graph graph) {
         for (var input : graph.getNode(targetUuid).getInputs()) {
             if (input.id().equals(targetName))
                 return input;
@@ -21,7 +23,7 @@ public record Connection(UUID targetUuid, String targetName, UUID sourceUuid, St
         return null;
     }
 
-    public Connector<?> getSourceConnector(Graph graph) {
+    public @Nullable Connector<?> getSourceConnector(Graph graph) {
         for (var output : graph.getNode(sourceUuid).getOutputs()) {
             if (output.id().equals(sourceName))
                 return output;

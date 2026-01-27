@@ -1,13 +1,14 @@
 package io.github.mattidragon.nodeflow.graph.node.group;
 
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Node groups are collections of similar nodes that are grouped together in the gui. A single node can be in multiple groups. You are free to add your own nodes to any group as long as they fit the group.

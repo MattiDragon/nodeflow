@@ -7,9 +7,10 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
+import net.minecraft.network.chat.Component;
+
 import java.util.List;
 import java.util.function.BiFunction;
-import net.minecraft.network.chat.Component;
 
 public class BinaryOperationNode<T, R> extends Node {
     private final DataType<T> inputType;
@@ -21,14 +22,6 @@ public class BinaryOperationNode<T, R> extends Node {
         this.inputType = inputType;
         this.resultType = resultType;
         this.function = function;
-    }
-
-    public static <T, R> NodeType<BinaryOperationNode<T, R>> makeType(DataType<T> inputType, DataType<R> resultType, BiFunction<T, T, R> function) {
-        // avoid reference errors with holder object (can't use array due to generics)
-        var type = new Object() {
-            NodeType<BinaryOperationNode<T, R>> type;
-        };
-        return type.type = new NodeType<>(graph -> new BinaryOperationNode<>(type.type, graph, inputType, resultType, function));
     }
 
     @Override

@@ -5,7 +5,7 @@ import io.github.mattidragon.nodeflow.client.compat.controlify.ControlifyProxy;
 import io.github.mattidragon.nodeflow.client.graph.ClientTagNodeGroup;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
-import io.github.mattidragon.nodeflow.client.ui.screen.HandledEditorScreen;
+import io.github.mattidragon.nodeflow.client.ui.screen.MenuEditorScreen;
 import io.github.mattidragon.nodeflow.client.ui.widget.ZoomableAreaWidget;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.GraphEnvironment;
@@ -16,7 +16,7 @@ import io.github.mattidragon.nodeflow.graph.node.NodeTypeTags;
 import io.github.mattidragon.nodeflow.graph.node.group.DirectNodeGroup;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
 import io.github.mattidragon.nodeflow.graph.node.group.TagNodeGroup;
-import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
+import io.github.mattidragon.nodeflow.screen.EditorMenu;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -28,18 +28,20 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class NodeFlowClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        MenuScreens.<EditorScreenHandler, HandledEditorScreen>register(NodeFlow.SCREEN_HANDLER, HandledEditorScreen::new);
+        MenuScreens.<EditorMenu, MenuEditorScreen>register(NodeFlow.SCREEN_HANDLER, MenuEditorScreen::new);
         ControlifyProxy.INSTANCE.register();
         NodeConfigScreenRegistry.registerDefaults();
-        NodeGroup.registerCodec(ClientTagNodeGroup.DECODER_ID, ClientTagNodeGroup.CODEC);
+        NodeGroup.registerCodec(ClientTagNodeGroup.CODEC_ID, ClientTagNodeGroup.CODEC);
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             var category = KeyMapping.Category.register(NodeFlow.id("debug"));
@@ -62,23 +64,23 @@ public class NodeFlowClient implements ClientModInitializer {
 
                 while (devKey.consumeClick()) {
                     var screen = new Screen(Component.literal("Test Zoom Areas")) {
-                        private ZoomableAreaWidget<Button> widget;
+                        private @Nullable ZoomableAreaWidget<Button> widget;
 
                         @Override
                         protected void init() {
                             super.init();
                             widget = addRenderableWidget(new ZoomableAreaWidget<>(64, 64, width - 128, height - 128));
 
-                            widget.add(Button.builder(Component.literal("1"), button -> System.out.println("1")).bounds(0, 0, 20, 20).build());
-                            widget.add(Button.builder(Component.literal("2"), button -> System.out.println("2")).bounds(0, 30, 20, 20).build());
-                            widget.add(Button.builder(Component.literal("3"), button -> System.out.println("3")).bounds(30, 0, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("1"), _ -> System.out.println("1")).bounds(0, 0, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("2"), _ -> System.out.println("2")).bounds(0, 30, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("3"), _ -> System.out.println("3")).bounds(30, 0, 20, 20).build());
 
                             //addDrawableChild(new Button(0, 0, 20, 20, Component.literal("+"), button -> {}));
                         }
 
                         @Override
                         protected void setInitialFocus() {
-                            setInitialFocus(widget);
+                            setInitialFocus(Objects.requireNonNull(widget));
                         }
                     };
                     client.setScreen(screen);

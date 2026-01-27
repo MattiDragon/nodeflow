@@ -7,8 +7,6 @@ import io.github.mattidragon.nodeflow.graph.node.builtin.base.TypedNode;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
-
 public class TypedNodeConfigScreen extends NodeConfigScreen<TypedNode> {
     public TypedNodeConfigScreen(TypedNode owner, EditorScreen parent) {
         super(owner, parent);
@@ -21,7 +19,7 @@ public class TypedNodeConfigScreen extends NodeConfigScreen<TypedNode> {
         var dataTypes = owner.getGraph().env.allowedDataTypes();
         addRenderableWidget(CycleButton.<DataType<?>>builder(DataType::name, dataTypes.getFirst())
                 .withValues(dataTypes)
-                .create(x, 70, 100, 20, Component.translatable("node.nodeflow.switch.type"), (button, type) -> owner.setType(type)))
+                .create(x, 70, 100, 20, Component.translatable("node.nodeflow.switch.type"), (_, type) -> owner.setType(type)))
                 .setValue(owner.getType());
     }
 }

@@ -2,14 +2,15 @@ package io.github.mattidragon.nodeflow.graph.node.group;
 
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import java.util.Arrays;
-import java.util.List;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
+
+import java.util.Arrays;
+import java.util.List;
 
 public record DirectNodeGroup(Component name, List<NodeType<?>> types) implements NodeGroup {
     public static final Identifier DECODER_ID = NodeFlow.id("direct");

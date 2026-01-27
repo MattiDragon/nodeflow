@@ -7,17 +7,18 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+
+import java.util.List;
 
 public class NumberNode extends Node {
     // We use string so we can represent error states
     private String value = "";
 
-    public NumberNode(Graph graph) {
-        super(NodeType.NUMBER, List.of(), graph);
+    public NumberNode(Graph graph, NodeType<NumberNode> type) {
+        super(type, List.of(), graph);
     }
 
     @Override

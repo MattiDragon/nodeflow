@@ -8,7 +8,7 @@ import io.github.mattidragon.nodeflow.graph.node.group.DirectNodeGroup;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
 import io.github.mattidragon.nodeflow.graph.node.group.TagNodeGroup;
 import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
-import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
+import io.github.mattidragon.nodeflow.screen.EditorMenu;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
@@ -21,7 +21,7 @@ public class NodeFlow implements ModInitializer {
     public static final String MOD_ID = "nodeflow";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public static final ExtendedMenuType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedMenuType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
+    public static final ExtendedMenuType<EditorMenu, Graph> SCREEN_HANDLER = new ExtendedMenuType<>(EditorMenu::new, Graph.PACKET_CODEC);
 
     public static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath(MOD_ID, path);

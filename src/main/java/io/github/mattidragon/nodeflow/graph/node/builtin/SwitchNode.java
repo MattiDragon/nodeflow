@@ -7,12 +7,13 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.TypedNode;
-import java.util.List;
 import net.minecraft.network.chat.Component;
 
+import java.util.List;
+
 public class SwitchNode extends TypedNode {
-    public SwitchNode(Graph graph) {
-        super(NodeType.SWITCH, List.of(), graph);
+    public SwitchNode(Graph graph, NodeType<SwitchNode> type) {
+        super(type, List.of(), graph);
     }
 
     @Override

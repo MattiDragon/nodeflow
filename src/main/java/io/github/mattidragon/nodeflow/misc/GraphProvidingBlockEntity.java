@@ -1,7 +1,7 @@
 package io.github.mattidragon.nodeflow.misc;
 
 import io.github.mattidragon.nodeflow.graph.Graph;
-import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
+import io.github.mattidragon.nodeflow.screen.EditorMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +14,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * This class is useful for those implementing a block entity with a graph screen. It implements sending the required info to the client and creating the screen handler.
  * You don't have to use this class; you only have to implement {@link GraphProvider} and {@link ExtendedMenuProvider} for everything to work.
@@ -25,12 +27,12 @@ public abstract class GraphProvidingBlockEntity extends BlockEntity implements G
 
     @Override
     public Graph getScreenOpeningData(ServerPlayer player) {
-        return getGraph(level, worldPosition);
+        return getGraph(Objects.requireNonNull(level), worldPosition);
     }
 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
-        return new EditorScreenHandler(syncId, this, ContainerLevelAccess.create(level, worldPosition));
+        return new EditorMenu(syncId, this, ContainerLevelAccess.create(level, worldPosition));
     }
 }

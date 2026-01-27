@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(AbstractWidget.class)
-public class ClickableWidgetMixin {
+public class AbstractWidgetMixin {
     @SuppressWarnings({"UnreachableCode", "ConstantValue"})
     @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;containsPointInScissor(II)Z"))
     private void tweakScissorCheckForNodes(Args args) {

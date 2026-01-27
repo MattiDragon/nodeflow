@@ -7,5 +7,5 @@ import net.minecraft.client.multiplayer.ClientLevel;
 
 public class ClientContextTypes {
     public static final ContextType<Minecraft> CLIENT = ContextType.register(new ContextType<>(Minecraft.class), NodeFlow.id("client"));
-    public static final ContextType<ClientLevel> CLIENT_WORLD = ContextType.register(new ContextType<>(ClientLevel.class, new ContextType[]{ ContextType.WORLD }), NodeFlow.id("client_world"));
+    public static final ContextType<ClientLevel> CLIENT_LEVEL = ContextType.register(new ContextType<>(ClientLevel.class, new ContextType[]{ ContextType.LEVEL}), NodeFlow.id("client_level"));
 }

@@ -8,9 +8,6 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.misc.EvaluationError;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
@@ -26,6 +23,10 @@ import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Graph {
     public static final StreamCodec<RegistryFriendlyByteBuf, Graph> PACKET_CODEC =
@@ -175,7 +176,7 @@ public class Graph {
                 element.read("id", UUIDUtil.AUTHLIB_CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
-            var node = type.get().generator().apply(this);
+            var node = type.get().newNode(this);
             node.readData(element);
             nodes.put(node.id, node);
         }
@@ -251,7 +252,7 @@ public class Graph {
             var nextNodes = new ArrayList<Node>();
 
             for (var node : readyNodes) {
-                var inputValues = availableInputs.computeIfAbsent(node, __ -> new HashMap<>());
+                var inputValues = availableInputs.computeIfAbsent(node, _ -> new HashMap<>());
                 var inputConnectors = node.getInputs();
 
                 // TODO: move to other node checks (why is it here?)
@@ -305,7 +306,7 @@ public class Graph {
                     var connections = getConnections(connector);
                     for (var connection : connections) {
                         var target = getNode(connection.targetUuid());
-                        var map = availableInputs.computeIfAbsent(target, __ -> new HashMap<>());
+                        var map = availableInputs.computeIfAbsent(target, _ -> new HashMap<>());
                         map.put(connection.targetName(), value);
 
                         // If the node has gotten all of its inputs, schedule it for the next round

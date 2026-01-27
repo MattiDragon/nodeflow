@@ -8,9 +8,10 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
+
+import java.util.List;
 
 public class TimeNode extends Node {
     private final Connector<?>[] outputs = {
@@ -19,8 +20,8 @@ public class TimeNode extends Node {
             DataType.NUMBER.makeOptionalOutput("day", this)
     };
 
-    public TimeNode(Graph graph) {
-        super(NodeType.TIME, List.of(ContextType.WORLD), graph);
+    public TimeNode(Graph graph, NodeType<TimeNode> type) {
+        super(type, List.of(ContextType.LEVEL), graph);
     }
 
     @Override
@@ -35,7 +36,7 @@ public class TimeNode extends Node {
 
     @Override
     protected Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context) {
-        Level world = context.get(ContextType.WORLD);
+        Level world = context.get(ContextType.LEVEL);
         return Either.left(new DataValue<?>[]{
                 DataType.NUMBER.makeValue((double) world.getGameTime()),
                 DataType.NUMBER.makeValue((double) world.getDefaultClockTime() % 24000L),

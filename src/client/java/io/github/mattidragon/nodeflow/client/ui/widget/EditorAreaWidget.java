@@ -22,7 +22,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.ByteArrayInputStream;
@@ -68,7 +68,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             oldNode.writeData(writeView);
             var nbt = writeView.buildResult();
 
-            newNode = oldNode.type.generator().apply(parent.graph);
+            newNode = oldNode.type.newNode(parent.graph);
             var readView = TagValueInput.create(logging, staticRegistries, nbt);
             newNode.readData(readView);
             newNode.id = UUID.randomUUID();
@@ -87,6 +87,33 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked copy key without clicking node");
             return;
         }
+
+        var bytes = copyNodeData();
+        if (bytes == null) return;
+        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
+
+        contextMenu.hide();
+    }
+
+    void cutNode() {
+        if (contextMenu.node == null) {
+            NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
+            return;
+        }
+
+        var bytes = copyNodeData();
+        if (bytes == null) return;
+        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
+
+        parent.removeNode(contextMenu.node);
+        contextMenu.hide();
+    }
+
+    private @Nullable ByteArrayOutputStream copyNodeData() {
+        if (contextMenu.node == null) {
+            return null;
+        }
+
         CompoundTag nbt;
         try (var logging = new ProblemReporter.ScopedCollector(() -> "Node copying", NodeFlow.LOGGER)) {
             var writeView = TagValueOutput.createWithContext(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
@@ -102,40 +129,9 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NbtIo.writeCompressed(nbt, out);
         } catch (IOException e) {
             NodeFlow.LOGGER.warn("Failed to copy node", e);
-            return;
+            return null;
         }
-
-        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
-
-        contextMenu.hide();
-    }
-
-    void cutNode() {
-        if (contextMenu.node == null) {
-            NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
-            return;
-        }
-        CompoundTag nbt;
-        try (var logging = new ProblemReporter.ScopedCollector(() -> "Node copying", NodeFlow.LOGGER)) {
-            var writeView = TagValueOutput.createWithContext(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
-            contextMenu.node.node.writeData(writeView);
-            nbt = writeView.buildResult();
-        }
-        nbt.remove("guiX");
-        nbt.remove("guiY");
-        nbt.remove("id");
-
-        var bytes = new ByteArrayOutputStream();
-        try (var out = Base64.getEncoder().wrap(bytes)) {
-            NbtIo.writeCompressed(nbt, out);
-        } catch (IOException e) {
-            NodeFlow.LOGGER.warn("Failed to cut node", e);
-            return;
-        }
-        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
-
-        parent.removeNode(contextMenu.node);
-        contextMenu.hide();
+        return bytes;
     }
 
     void pasteNode(double mouseX, double mouseY) {
@@ -157,7 +153,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Failed to paste node, invalid type");
             return;
         }
-        var node = type.get().generator().apply(parent.graph);
+        var node = type.get().newNode(parent.graph);
         try (var logging = new ProblemReporter.ScopedCollector(() -> "Node pasting", NodeFlow.LOGGER)) {
             var readView = TagValueInput.create(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY), nbt);
             node.readData(readView);
@@ -294,14 +290,14 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 targetY = row.getConnectorY();
             }
 
-            var connectingSegment = parent.findSegment(parent.connectingConnector);
+            var connectingSegment = Objects.requireNonNull(parent.findSegment(parent.connectingConnector));
 
             renderConnectorLine(context, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color());
         }
 
         for (Connection connection : parent.graph.getConnections()) {
-            var input = parent.findSegment(Objects.requireNonNull(connection.getTargetConnector(parent.graph)));
-            var output = parent.findSegment(Objects.requireNonNull(connection.getSourceConnector(parent.graph)));
+            var input = Objects.requireNonNull(parent.findSegment(Objects.requireNonNull(connection.getTargetConnector(parent.graph))));
+            var output = Objects.requireNonNull(parent.findSegment(Objects.requireNonNull(connection.getSourceConnector(parent.graph))));
 
             renderConnectorLine(context, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color());
         }

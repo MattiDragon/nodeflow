@@ -15,7 +15,7 @@ import dev.isxander.controlify.screenop.ScreenProcessorProvider;
 import dev.isxander.controlify.virtualmouse.VirtualMouseHandler;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
-import io.github.mattidragon.nodeflow.client.ui.screen.HandledEditorScreen;
+import io.github.mattidragon.nodeflow.client.ui.screen.MenuEditorScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.input.KeyEvent;
@@ -33,7 +33,7 @@ public class ControlifyPlugin implements ControlifyProxy {
     @Override
     public void register() {
         registerScreenType(EditorScreen.class);
-        registerScreenType(HandledEditorScreen.class);
+        registerScreenType(MenuEditorScreen.class);
         editorUpKey = ControlifyBindApi.get().registerBinding(builder ->
                 builder.defaultInput(GamepadInputs.getBind(GamepadInputs.RIGHT_STICK_AXIS_UP))
                         .id(NodeFlow.id("editor_up"))
@@ -69,7 +69,7 @@ public class ControlifyPlugin implements ControlifyProxy {
         @Override
         public void onWidgetRebuild() {
             super.onWidgetRebuild();
-            ButtonGuidePredicate<Button> predicate = button -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
+            ButtonGuidePredicate<Button> predicate = _ -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
 
             ButtonGuideApi.addGuideToButton(screen.plusButton, ControlifyBindings.GUI_ABSTRACT_ACTION_1, predicate);
             ButtonGuideApi.addGuideToButton(screen.deleteButton, ControlifyBindings.GUI_ABSTRACT_ACTION_2, predicate);

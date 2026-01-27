@@ -1,16 +1,17 @@
 package io.github.mattidragon.nodeflow.graph;
 
-import io.github.mattidragon.nodeflow.graph.context.Context;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.util.*;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Contains info about an environment in which graphs exist. For most use cases there should only be need for a single environment per system using nodeflow, but if you, for example, would like some nodes to unlockable as part of you mods progressions you can make a new environment for each usage.
@@ -78,30 +79,6 @@ public record GraphEnvironment(List<DataType<?>> allowedDataTypes, List<ContextT
 
         public GraphEnvironment build() {
             return new GraphEnvironment(allowedDataTypes, availableContexts, groups);
-        }
-    }
-
-    private static class DummyContext extends Context {
-        private final List<ContextType<?>> list;
-
-        public DummyContext(List<ContextType<?>> list) {
-            super(Map.of());
-            this.list = list;
-        }
-
-        @Override
-        public <T> T get(ContextType<T> type) {
-            return null;
-        }
-
-        @Override
-        public boolean contains(ContextType<?> type) {
-            if (list.contains(type)) return true;
-            for (var entry : list) {
-                if (ArrayUtils.contains(entry.parents(), type))
-                    return true;
-            }
-            return false;
         }
     }
 }

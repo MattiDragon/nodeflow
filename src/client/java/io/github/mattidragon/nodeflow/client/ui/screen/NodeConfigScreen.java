@@ -63,8 +63,6 @@ public class NodeConfigScreen<T extends Node> extends Screen {
     public void onClose() {
         parent.graph.cleanConnections(owner);
         parent.syncGraph();
-        if (minecraft != null) {
-            minecraft.setScreen(parent);
-        }
+        minecraft.setScreen(parent);
     }
 }
