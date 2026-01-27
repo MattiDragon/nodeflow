@@ -20,7 +20,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -163,7 +163,7 @@ public class Graph {
         for (var element : view.childrenListOrEmpty("nodes")) {
             var typeString = element.getStringOr("type", "<missing>");
             var type = element.getString("type")
-                    .map(ResourceLocation::tryParse)
+                    .map(Identifier::tryParse)
                     .flatMap(NodeType.REGISTRY::getOptional);
             if (type.isEmpty()) {
                 NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", typeString);

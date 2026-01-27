@@ -1,5 +1,6 @@
 package io.github.mattidragon.nodeflow.client.compat.controlify;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.isxander.controlify.Controlify;
 import dev.isxander.controlify.api.bind.ControlifyBindApi;
 import dev.isxander.controlify.api.bind.InputBindingSupplier;
@@ -16,6 +17,8 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.client.ui.screen.HandledEditorScreen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -75,18 +78,30 @@ public class ControlifyPlugin implements ControlifyProxy {
 
         @Override
         protected void handleButtons(ControllerEntity controller) {
-            if (screen.plusButton.active && ControlifyBindings.GUI_ABSTRACT_ACTION_1.on(controller).justPressed()) screen.plusButton.onPress();
-            if (screen.deleteButton.active && ControlifyBindings.GUI_ABSTRACT_ACTION_2.on(controller).justPressed()) screen.deleteButton.onPress();
+            var iwm = new InputWithModifiers() {
+                @Override
+                public @InputConstants.Value int input() {
+                    return 0;
+                }
+
+                @Override
+                public @Modifiers int modifiers() {
+                    return 0;
+                }
+            };
+
+            if (screen.plusButton.active && ControlifyBindings.GUI_ABSTRACT_ACTION_1.on(controller).justPressed()) screen.plusButton.onPress(iwm);
+            if (screen.deleteButton.active && ControlifyBindings.GUI_ABSTRACT_ACTION_2.on(controller).justPressed()) screen.deleteButton.onPress(iwm);
             if (ControlifyBindings.GUI_BACK.on(controller).justPressed()) {
                 if (screen.backButton.active) {
-                    screen.backButton.onPress();
+                    screen.backButton.onPress(iwm);
                 } else {
                     screen.onClose();
                 }
             }
 
             if (ControlifyBindings.GUI_PRESS.on(controller).justPressed())
-                screen.keyPressed(GLFW.GLFW_KEY_ENTER, 0, 0);
+                screen.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ENTER, 0, 0));
 
             var area = screen.getArea();
             var impulseX = editorRightKey.on(controller).analogueNow() - editorLeftKey.on(controller).analogueNow();

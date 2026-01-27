@@ -6,10 +6,10 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class MessageToast implements Toast {
-    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("toast/advancement");
+    private static final Identifier TEXTURE = Identifier.withDefaultNamespace("toast/advancement");
     private final Component title;
     private Visibility visibility = Visibility.SHOW;
 

@@ -2,7 +2,7 @@ package io.github.mattidragon.nodeflow.misc;
 
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,9 +16,9 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * This class is useful for those implementing a block entity with a graph screen. It implements sending the required info to the client and creating the screen handler.
- * You don't have to use this class; you only have to implement {@link GraphProvider} and {@link ExtendedScreenHandlerFactory} for everything to work.
+ * You don't have to use this class; you only have to implement {@link GraphProvider} and {@link ExtendedMenuProvider} for everything to work.
  */
-public abstract class GraphProvidingBlockEntity extends BlockEntity implements GraphProvider, ExtendedScreenHandlerFactory<Graph> {
+public abstract class GraphProvidingBlockEntity extends BlockEntity implements GraphProvider, ExtendedMenuProvider<Graph> {
     public GraphProvidingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }

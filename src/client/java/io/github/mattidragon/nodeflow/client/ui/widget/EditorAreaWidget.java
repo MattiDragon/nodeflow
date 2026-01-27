@@ -10,7 +10,9 @@ import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -206,19 +208,19 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_2) {
             for (var node : Lists.reverse(this.children())) {
-                if (node.isMouseOver(modifyX(mouseX), modifyY(mouseY))) {
-                    setContextMenu((int) mouseX, (int) mouseY, node);
+                if (node.isMouseOver(modifyX(event.x()), modifyY(event.y()))) {
+                    setContextMenu((int) event.x(), (int) event.y(), node);
                     return true;
                 }
             }
-            setContextMenu((int) mouseX, (int) mouseY, null);
+            setContextMenu((int) event.x(), (int) event.y(), null);
             return true;
         }
 
-        return contextMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
+        return contextMenu.mouseClicked(event, doubleClick) || super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -237,25 +239,25 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (Screen.isPaste(keyCode)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.isPaste()) {
             pasteNode(x + width / 2.0, x + height / 2.0);
             return true;
         }
 
-        if (contextMenu.isVisible() && (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN))
+        if (contextMenu.isVisible() && (event.isUp() || event.isDown()))
             return false;
-        if (contextMenu.isVisible() && (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT)) {
+        if (contextMenu.isVisible() && (event.isLeft() || event.isRight())) {
             contextMenu.hide();
             return false;
         }
 
-        return contextMenu.keyPressed(keyCode, scanCode, modifiers) || super.keyPressed(keyCode, scanCode, modifiers);
+        return contextMenu.keyPressed(event) || super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return contextMenu.charTyped(chr, modifiers) || super.charTyped(chr, modifiers);
+    public boolean charTyped(CharacterEvent event) {
+        return contextMenu.charTyped(event) || super.charTyped(event);
     }
 
     @Override

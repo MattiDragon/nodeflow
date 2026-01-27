@@ -7,7 +7,7 @@ import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,7 @@ public class HandledEditorScreen extends EditorScreen implements MenuAccess<Edit
         this.handler = handler;
     }
 
-    public HandledEditorScreen(EditorScreenHandler handler, Inventory inventory, Component title, ResourceLocation texture) {
+    public HandledEditorScreen(EditorScreenHandler handler, Inventory inventory, Component title, Identifier texture) {
         super(title, handler.graph.copy(), texture);
         this.handler = handler;
     }

@@ -29,15 +29,14 @@ loom.splitEnvironmentSourceSets()
 
 dependencies {
     minecraft(libs.minecraft)
-    mappings(loom.officialMojangMappings())
-    modImplementation(libs.fabric.loader)
+    implementation(libs.fabric.loader)
 
-    modCompileOnly(libs.controlify) {
+    compileOnly(libs.controlify) {
         exclude(group = "net.fabricmc.fabric-api")
         exclude(group = "maven.modrinth", module = "sodium")
         exclude(group = "maven.modrinth", module = "iris")
     }
-    modImplementation(libs.fabric.api)
+    implementation(libs.fabric.api)
 }
 
 loom {

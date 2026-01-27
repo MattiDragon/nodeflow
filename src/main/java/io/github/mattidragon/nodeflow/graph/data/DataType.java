@@ -8,7 +8,7 @@ import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public record DataType<T>(int color, boolean splittable) {
     public static final ResourceKey<Registry<DataType<?>>> KEY = ResourceKey.createRegistryKey(NodeFlow.id("data_type"));
@@ -40,7 +40,7 @@ public record DataType<T>(int color, boolean splittable) {
         return new Connector<>(this, name, true, true, parent);
     }
 
-    public static <T> DataType<T> register(DataType<T> type, ResourceLocation id) {
+    public static <T> DataType<T> register(DataType<T> type, Identifier id) {
         Registry.register(REGISTRY, id, type);
         return type;
     }

@@ -3,6 +3,7 @@ package io.github.mattidragon.nodeflow.client.ui.widget;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -162,10 +163,10 @@ public class ContextMenuWidget extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (widgets.isEmpty()) return false;
 
-        if (!super.mouseClicked(mouseX, mouseY, button)) {
+        if (!super.mouseClicked(event, doubleClick)) {
             // Hide if clicked outside
             hide();
         }

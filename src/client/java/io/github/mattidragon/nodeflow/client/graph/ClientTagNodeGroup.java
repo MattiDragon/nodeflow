@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.tag.client.v1.ClientTags;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  * This is only safe to use for fully client side graph environments.
  */
 public record ClientTagNodeGroup(TagKey<NodeType<?>> tag) implements NodeGroup {
-    public static final ResourceLocation DECODER_ID = NodeFlow.id("client_tag");
+    public static final Identifier DECODER_ID = NodeFlow.id("client_tag");
     public static final StreamCodec<FriendlyByteBuf, TagNodeGroup> CODEC =
-            StreamCodec.composite(ResourceLocation.STREAM_CODEC.map(id -> TagKey.create(NodeType.KEY, id), TagKey::location), TagNodeGroup::tag, TagNodeGroup::new);
+            StreamCodec.composite(Identifier.STREAM_CODEC.map(id -> TagKey.create(NodeType.KEY, id), TagKey::location), TagNodeGroup::tag, TagNodeGroup::new);
 
     @Override
     public Component getName() {
@@ -37,7 +37,7 @@ public record ClientTagNodeGroup(TagKey<NodeType<?>> tag) implements NodeGroup {
     }
 
     @Override
-    public ResourceLocation getCodecId() {
+    public Identifier getCodecId() {
         return DECODER_ID;
     }
 }

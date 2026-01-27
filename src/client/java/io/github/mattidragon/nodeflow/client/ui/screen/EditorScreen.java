@@ -8,6 +8,7 @@ import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -26,18 +27,18 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 
 public class EditorScreen extends Screen {
-    private static final ResourceLocation DEFAULT_TEXTURE = NodeFlow.id("textures/gui/editor.png");
+    private static final Identifier DEFAULT_TEXTURE = NodeFlow.id("textures/gui/editor.png");
     public static final int TILE_SIZE = 16;
     public static final int BORDER_SIZE = 8;
     public static final int BORDER_OFFSET = 32;
     public static final int GRID_OFFSET = BORDER_OFFSET + BORDER_SIZE;
 
     public final Graph graph;
-    public final ResourceLocation texture;
+    public final Identifier texture;
 
     protected boolean isAddingNode = false;
     protected boolean isDeletingNode = false;
@@ -60,7 +61,7 @@ public class EditorScreen extends Screen {
         this(title, graph, DEFAULT_TEXTURE);
     }
 
-    public EditorScreen(Component title, Graph graph, ResourceLocation texture) {
+    public EditorScreen(Component title, Graph graph, Identifier texture) {
         super(title);
         this.graph = graph;
         this.texture = texture;
@@ -241,12 +242,12 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (connectingConnector != null && button == 0) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (connectingConnector != null && event.button() == 0) {
             if (!connectingConnector.type().splittable() || !connectingConnector.isOutput())
                 graph.removeConnections(connectingConnector);
 
-            tryFindConnection(mouseX, mouseY);
+            tryFindConnection(event.x(), event.y());
 
             area.children().forEach(NodeWidget::updateTooltip);
 
@@ -255,7 +256,7 @@ public class EditorScreen extends Screen {
 //        setFocused(null);
         // Sync node movement and connector changes
         syncGraph();
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
@@ -416,9 +417,9 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             if (!active) return false;
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, doubleClick);
         }
 
         @Override
@@ -455,12 +456,12 @@ public class EditorScreen extends Screen {
             }
 
             @Override
-            public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
+            public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float a) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
-                    button.setY(y);
-                    button.setX(x + i * 110);
-                    button.render(context, mouseX, mouseY, delta);
+                    button.setY(getContentY());
+                    button.setX(getContentX() + i * 110);
+                    button.render(graphics, mouseX, mouseY, a);
                 }
             }
         }

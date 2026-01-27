@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -38,7 +38,7 @@ public record ContextType<T>(Class<T> type, ContextType<?>[] parents) {
 
     public static void register() {}
 
-    public static <T> ContextType<T> register(ContextType<T> type, ResourceLocation id) {
+    public static <T> ContextType<T> register(ContextType<T> type, Identifier id) {
         Registry.register(REGISTRY, id, type);
         return type;
     }

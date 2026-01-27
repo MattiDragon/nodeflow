@@ -38,7 +38,7 @@ public class TimeNode extends Node {
         Level world = context.get(ContextType.WORLD);
         return Either.left(new DataValue<?>[]{
                 DataType.NUMBER.makeValue((double) world.getGameTime()),
-                DataType.NUMBER.makeValue((double) world.getDayTime() % 24000L),
+                DataType.NUMBER.makeValue((double) world.getDefaultClockTime() % 24000L),
                 DataType.NUMBER.makeValue((double) world.getGameTime() / 24000L)
         });
     }

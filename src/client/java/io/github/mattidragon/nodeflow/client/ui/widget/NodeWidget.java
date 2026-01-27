@@ -5,7 +5,6 @@ import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.node.Node;
-import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -14,14 +13,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +35,7 @@ public class NodeWidget extends AbstractWidget {
     private int dragY;
 
     public NodeWidget(Node node, EditorScreen parent) {
-        super(node.guiX, node.guiY, calcWidth(node, Screens.getTextRenderer(parent)), 24 + 8 + (node.getInputs().length + node.getOutputs().length) * ROW_HEIGHT, node.getName());
+        super(node.guiX, node.guiY, calcWidth(node, parent.getFont()), 24 + 8 + (node.getInputs().length + node.getOutputs().length) * ROW_HEIGHT, node.getName());
         setX(getX() - width / 2);
         setY(getY() - height / 2);
 
@@ -74,58 +73,53 @@ public class NodeWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         // Stolen from PressableWidget and tweaked
         if (!this.active || !this.visible) return false;
-        if (CommonInputs.selected(keyCode)) {
+        if (event.isSelection()) {
             this.playDownSound(Minecraft.getInstance().getSoundManager());
             var area = parent.getArea();
             area.setContextMenu((int) area.reverseModifyX(getX()), (int) area.reverseModifyY(getY()), this);
             return true;
         }
 
-        switch (keyCode) {
-            case GLFW.GLFW_KEY_LEFT -> {
-                setX(getX() - 10);
-                updateNodePos();
-                return true;
-            }
-            case GLFW.GLFW_KEY_DOWN -> {
-                setY(getY() + 10);
-                updateNodePos();
-                return true;
-            }
-            case GLFW.GLFW_KEY_UP -> {
-                setY(getY() - 10);
-                updateNodePos();
-                return true;
-            }
-            case GLFW.GLFW_KEY_RIGHT -> {
-                setX(getX() + 10);
-                updateNodePos();
-                return true;
-            }
+        if (event.isLeft()) {
+            setX(getX() - 10);
+            updateNodePos();
+            return true;
+        } else if (event.isRight()) {
+            setX(getX() + 10);
+            updateNodePos();
+            return true;
+        } else if (event.isUp()) {
+            setY(getY() - 10);
+            updateNodePos();
+            return true;
+        } else if (event.isDown()) {
+            setY(getY() + 10);
+            updateNodePos();
+            return true;
         }
         return false;
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onClick(MouseButtonEvent event, boolean doubleClick) {
         if (parent.isDeletingNode()) {
             parent.removeNode(this);
             return;
         }
 
-        dragX = (int) (getX() - mouseX);
-        dragY = (int) (getY() - mouseY);
+        dragX = (int) (getX() - event.x());
+        dragY = (int) (getY() - event.y());
 
-        if (NodeConfigScreenRegistry.hasConfig(node) && isMouseOnButton(mouseX, mouseY)) {
+        if (NodeConfigScreenRegistry.hasConfig(node) && isMouseOnButton(event.x(), event.y())) {
             Minecraft.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(node, parent));
             return;
         }
 
         for (Segment row : calculateSegments()) {
-            if (row.hasConnectorAt(mouseX, mouseY)) {
+            if (row.hasConnectorAt(event.x(), event.y())) {
                 parent.connectingConnector = row.connector;
                 break;
             }
@@ -137,11 +131,11 @@ public class NodeWidget extends AbstractWidget {
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
+    protected void onDrag(MouseButtonEvent event, double dx, double dy) {
         if (parent.connectingConnector != null) return;
 
-        setX((int) (mouseX + dragX));
-        setY((int) (mouseY + dragY));
+        setX((int) (event.x() + dragX));
+        setY((int) (event.y() + dragY));
 
         updateNodePos();
     }
@@ -170,7 +164,7 @@ public class NodeWidget extends AbstractWidget {
 
     @Override
     public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        var textRenderer = Screens.getTextRenderer(parent);
+        var font = parent.getFont();
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
@@ -195,7 +189,7 @@ public class NodeWidget extends AbstractWidget {
             segment.render(context, mouseX, mouseY);
         }
 
-        context.drawString(textRenderer, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
+        context.drawString(font, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
 
         // Used to hide tooltip
         if (!isMouseOnButton(mouseX, mouseY)) {
@@ -234,7 +228,7 @@ public class NodeWidget extends AbstractWidget {
     }
 
     public void updateWidth() {
-        this.width = calcWidth(node, Screens.getTextRenderer(parent));
+        this.width = calcWidth(node, parent.getFont());
     }
 
     public class Segment {
@@ -263,7 +257,7 @@ public class NodeWidget extends AbstractWidget {
         }
 
         public void render(GuiGraphics context, int mouseX, int mouseY) {
-            var textRenderer = Screens.getTextRenderer(parent);
+            var font = parent.getFont();
 
             var brightness = hasConnectorAt(mouseX, mouseY) ? 2 : 1;
             var color = this.connector.type().color();
@@ -275,9 +269,9 @@ public class NodeWidget extends AbstractWidget {
             context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
             if (!isOutput)
-                context.drawString(textRenderer, this.connector.id(), x + 16, y + 2, 0xff404040, false);
+                context.drawString(font, this.connector.id(), x + 16, y + 2, 0xff404040, false);
             else
-                context.drawString(textRenderer, this.connector.id(), x + width - 16 - textRenderer.width(this.connector.id()), y + 2, 0xff404040, false);
+                context.drawString(font, this.connector.id(), x + width - 16 - font.width(this.connector.id()), y + 2, 0xff404040, false);
         }
     }
 }

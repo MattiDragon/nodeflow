@@ -9,10 +9,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public record DirectNodeGroup(Component name, List<NodeType<?>> types) implements NodeGroup {
-    public static final ResourceLocation DECODER_ID = NodeFlow.id("direct");
+    public static final Identifier DECODER_ID = NodeFlow.id("direct");
     public static final StreamCodec<RegistryFriendlyByteBuf, DirectNodeGroup> CODEC =
             StreamCodec.composite(ComponentSerialization.TRUSTED_STREAM_CODEC, DirectNodeGroup::name, 
                     ByteBufCodecs.registry(NodeType.REGISTRY.key()).apply(ByteBufCodecs.list()), DirectNodeGroup::types,
@@ -37,7 +37,7 @@ public record DirectNodeGroup(Component name, List<NodeType<?>> types) implement
     }
 
     @Override
-    public ResourceLocation getCodecId() {
+    public Identifier getCodecId() {
         return DECODER_ID;
     }
 }

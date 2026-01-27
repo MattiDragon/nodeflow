@@ -10,10 +10,10 @@ import io.github.mattidragon.nodeflow.graph.node.group.TagNodeGroup;
 import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,10 +21,10 @@ public class NodeFlow implements ModInitializer {
     public static final String MOD_ID = "nodeflow";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public static final ExtendedScreenHandlerType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedScreenHandlerType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
+    public static final ExtendedMenuType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedMenuType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     @Override

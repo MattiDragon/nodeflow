@@ -1,7 +1,8 @@
 package io.github.mattidragon.nodeflow.client.ui.widget;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -10,8 +11,10 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.narration.NarrationSupplier;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -113,19 +116,20 @@ public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & Narrat
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!isMouseOver(mouseX, mouseY) || !active || !visible) return false;
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (!isMouseOver(event.x(), event.y()) || !active || !visible) return false;
         /*
          Super returns true if a child accepts the click and sets that child as focused.
          We read the focused element and move it to the top.
          This is done here and not when the focus is set because keyboard nav doesn't like the child order changing.
         */
-        if (super.mouseClicked(modifyX(mouseX), modifyY(mouseY), button)) {
+        if (super.mouseClicked(modifyMouseEvent(event), doubleClick)) {
             // Only children should be able to get focused
-            @SuppressWarnings("unchecked") 
-            var focused = (T) getFocused();
+            @SuppressWarnings("unchecked")
+            T focused = (T) getFocused(); // IntelliJ bug with using var here, so we don't
+
             // If the node was deleted due to the click we don't want to add it back
-            if (children.remove(focused)) {
+            if (focused != null && children.remove(focused)) {
                 children.addFirst(focused);
             }
         } else {
@@ -134,20 +138,24 @@ public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & Narrat
         return true;
     }
 
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (!isMouseOver(mouseX, mouseY) || !active || !visible) return false;
-        return super.mouseReleased(modifyX(mouseX), modifyY(mouseY), button);
+    private MouseButtonEvent modifyMouseEvent(MouseButtonEvent event) {
+        return new MouseButtonEvent(modifyX(event.x()), modifyY(event.y()), event.buttonInfo());
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (!isMouseOver(mouseX, mouseY) || !active || !visible) return false;
-        if (super.mouseDragged(modifyX(mouseX), modifyY(mouseY), button, modifyDeltaX(deltaX), modifyDeltaY(deltaY)))
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (!isMouseOver(event.x(), event.y()) || !active || !visible) return false;
+        return super.mouseReleased(modifyMouseEvent(event));
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        if (!isMouseOver(event.x(), event.y()) || !active || !visible) return false;
+        if (super.mouseDragged(modifyMouseEvent(event), modifyDeltaX(dx), modifyDeltaY(dy)))
             return true;
 
-        viewX += deltaX;
-        viewY += deltaY;
+        viewX += dx;
+        viewY += dy;
 
         return true;
     }
@@ -175,23 +183,29 @@ public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & Narrat
 //        return super.hoveredElement(mouseX, mouseY);
 //    }
 
+
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!active || !visible) return false;
-        if (super.keyPressed(keyCode, scanCode, modifiers))
+        if (super.keyPressed(event))
             return true;
 
-        switch (keyCode) {
-            case GLFW.GLFW_KEY_UP -> viewY += 10;
-            case GLFW.GLFW_KEY_DOWN -> viewY -= 10;
-            case GLFW.GLFW_KEY_RIGHT -> viewX -= 10;
-            case GLFW.GLFW_KEY_LEFT -> viewX += 10;
-            case GLFW.GLFW_KEY_MINUS, GLFW.GLFW_KEY_KP_SUBTRACT -> zoom(-1, x + width / 2.0, y + height / 2.0);
-            case GLFW.GLFW_KEY_KP_ADD -> zoom(1, x + width / 2.0, y + height / 2.0);
-            default -> {
-                return false;
-            }
+        if (event.isUp()) {
+            viewY += 10;
+        } else if (event.isDown()) {
+            viewY -= 10;
+        } else if (event.isRight()) {
+            viewX -= 10;
+        } else if (event.isLeft()) {
+            viewX += 10;
+        } else if (event.key() == GLFW.GLFW_KEY_MINUS || event.key() == GLFW.GLFW_KEY_KP_SUBTRACT) {
+            zoom(-1, x + width / 2.0, y + height / 2.0);
+        } else if (event.key() == GLFW.GLFW_KEY_KP_ADD) {
+            zoom(1, x + width / 2.0, y + height / 2.0);
+        } else {
+            return false;
         }
+
         return true;
     }
 

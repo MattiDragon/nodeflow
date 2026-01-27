@@ -15,7 +15,7 @@ import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import java.util.function.Function;
 
 public record NodeType<T extends Node>(Function<Graph, T> generator) {
@@ -80,7 +80,7 @@ public record NodeType<T extends Node>(Function<Graph, T> generator) {
 
     public static void register() {}
 
-    public static <T extends Node> NodeType<T> register(NodeType<T> type, ResourceLocation id) {
+    public static <T extends Node> NodeType<T> register(NodeType<T> type, Identifier id) {
         Registry.register(REGISTRY, id, type);
         return type;
     }

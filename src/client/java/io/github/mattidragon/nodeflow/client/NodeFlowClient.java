@@ -21,7 +21,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.components.Button;
@@ -42,8 +42,9 @@ public class NodeFlowClient implements ClientModInitializer {
         NodeGroup.registerCodec(ClientTagNodeGroup.DECODER_ID, ClientTagNodeGroup.CODEC);
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            var debugEditorKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.nodeflow.debug", GLFW.GLFW_KEY_K, "key.categories.nodeflow"));
-            var devKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.nodeflow.dev", GLFW.GLFW_KEY_M, "key.categories.nodeflow"));
+            var category = KeyMapping.Category.register(NodeFlow.id("debug"));
+            var debugEditorKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.nodeflow.debug", GLFW.GLFW_KEY_K, category));
+            var devKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.nodeflow.dev", GLFW.GLFW_KEY_M, category));
             var graph = new Graph(new GraphEnvironment(DataType.REGISTRY.stream().toList(),
                     ContextType.REGISTRY.stream().toList(),
                     List.of(new TagNodeGroup(NodeTypeTags.LOGIC),
