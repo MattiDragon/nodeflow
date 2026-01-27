@@ -1,8 +1,7 @@
 package io.github.mattidragon.nodeflow.misc;
 
-import net.minecraft.text.Text;
-
 import java.util.Locale;
+import net.minecraft.network.chat.Component;
 
 public record EvaluationError(Type type, Object... data) {
     /**
@@ -58,7 +57,7 @@ public record EvaluationError(Type type, Object... data) {
     /**
      * Returns a text instance with an explanation for the user.
      */
-    public Text getName() {
-        return Text.translatable("nodeflow.graph.error." + type.name().toLowerCase(Locale.ROOT), data);
+    public Component getName() {
+        return Component.translatable("nodeflow.graph.error." + type.name().toLowerCase(Locale.ROOT), data);
     }
 }

@@ -8,9 +8,8 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class SendNumberNode extends Node {
     private final Connector<?>[] inputs = new Connector[] { DataType.NUMBER.makeRequiredInput("input", this) };
@@ -30,9 +29,9 @@ public class SendNumberNode extends Node {
     }
 
     @Override
-    protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
-        context.get(ContextType.SERVER_WORLD).getPlayers(player -> context.get(ContextType.BLOCK_POS).getSquaredDistance(player.getPos()) < 16 * 16).forEach(player ->
-                player.sendMessage(Text.translatable("node.nodeflow.broadcast.message", inputs[0].getAs(DataType.NUMBER))));
+    protected Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context) {
+        context.get(ContextType.SERVER_WORLD).getPlayers(player -> context.get(ContextType.BLOCK_POS).distToCenterSqr(player.position()) < 16 * 16).forEach(player ->
+                player.sendSystemMessage(Component.translatable("node.nodeflow.broadcast.message", inputs[0].getAs(DataType.NUMBER))));
 
         return Either.left(new DataValue<?>[0]);
     }

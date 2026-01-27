@@ -7,10 +7,9 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.text.Text;
-
 import java.util.List;
 import java.util.function.BiFunction;
+import net.minecraft.network.chat.Component;
 
 public class BinaryOperationNode<T, R> extends Node {
     private final DataType<T> inputType;
@@ -46,7 +45,7 @@ public class BinaryOperationNode<T, R> extends Node {
     }
 
     @Override
-    protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
-        return Either.<DataValue<?>[], Text>left(new DataValue[]{resultType.makeValue(function.apply(inputs[0].getAs(inputType), inputs[1].getAs(inputType)))});
+    protected Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context) {
+        return Either.<DataValue<?>[], Component>left(new DataValue[]{resultType.makeValue(function.apply(inputs[0].getAs(inputType), inputs[1].getAs(inputType)))});
     }
 }

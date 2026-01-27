@@ -8,35 +8,34 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.misc.EvaluationError;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.storage.NbtReadView;
-import net.minecraft.storage.NbtWriteView;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.text.Text;
-import net.minecraft.util.ErrorReporter;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Uuids;
-
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class Graph {
-    public static final PacketCodec<RegistryByteBuf, Graph> PACKET_CODEC =
-            PacketCodec.ofStatic((buf, graph) -> {
+    public static final StreamCodec<RegistryFriendlyByteBuf, Graph> PACKET_CODEC =
+            StreamCodec.of((buf, graph) -> {
                 GraphEnvironment.PACKET_CODEC.encode(buf, graph.env);
-                buf.writeNbt(graph.writeNbt(buf.getRegistryManager()));
+                buf.writeNbt(graph.writeNbt(buf.registryAccess()));
             }, buf -> {
                 var environment = GraphEnvironment.PACKET_CODEC.decode(buf);
                 var graph = new Graph(environment);
-                graph.readNbt(Objects.requireNonNull(buf.readNbt(), "Missing nbt in packet"), buf.getRegistryManager());
+                graph.readNbt(Objects.requireNonNull(buf.readNbt(), "Missing nbt in packet"), buf.registryAccess());
                 return graph;
             });
     
@@ -49,7 +48,7 @@ public class Graph {
     }
 
     public Graph copy() {
-        var staticRegistries = DynamicRegistryManager.of(Registries.REGISTRIES);
+        var staticRegistries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
         var graph = new Graph(env);
         graph.readNbt(writeNbt(staticRegistries), staticRegistries);
         return graph;
@@ -135,45 +134,45 @@ public class Graph {
         return Set.of();
     }
 
-    public NbtCompound writeNbt(RegistryWrapper.WrapperLookup registries) {
-        try (var logging = new ErrorReporter.Logging(() -> "Graph NBT serializer", NodeFlow.LOGGER)) {
-            var view = NbtWriteView.create(logging, registries);
+    public CompoundTag writeNbt(HolderLookup.Provider registries) {
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Graph NBT serializer", NodeFlow.LOGGER)) {
+            var view = TagValueOutput.createWithContext(logging, registries);
             writeData(view);
-            return view.getNbt();
+            return view.buildResult();
         }
     }
 
-    public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        try (var logging = new ErrorReporter.Logging(() -> "Graph NBT deserializer", NodeFlow.LOGGER)) {
-            var view = NbtReadView.create(logging, registries, nbt);
+    public void readNbt(CompoundTag nbt, HolderLookup.Provider registries) {
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Graph NBT deserializer", NodeFlow.LOGGER)) {
+            var view = TagValueInput.create(logging, registries, nbt);
             readData(view);
         }
     }
 
-    public void writeData(WriteView view) {
-        var nodeData = view.getList("nodes");
-        nodes.values().forEach(node -> node.writeData(nodeData.add()));
+    public void writeData(ValueOutput view) {
+        var nodeData = view.childrenList("nodes");
+        nodes.values().forEach(node -> node.writeData(nodeData.addChild()));
 
-        view.put("connections", Connection.CODEC.listOf(), List.copyOf(connections));
+        view.store("connections", Connection.CODEC.listOf(), List.copyOf(connections));
     }
 
-    public void readData(ReadView view) {
+    public void readData(ValueInput view) {
         var ignoredIds = new ArrayList<UUID>();
 
         nodes.clear();
-        for (var element : view.getListReadView("nodes")) {
-            var typeString = element.getString("type", "<missing>");
-            var type = element.getOptionalString("type")
-                    .map(Identifier::tryParse)
-                    .flatMap(NodeType.REGISTRY::getOptionalValue);
+        for (var element : view.childrenListOrEmpty("nodes")) {
+            var typeString = element.getStringOr("type", "<missing>");
+            var type = element.getString("type")
+                    .map(ResourceLocation::tryParse)
+                    .flatMap(NodeType.REGISTRY::getOptional);
             if (type.isEmpty()) {
                 NodeFlow.LOGGER.warn("Unknown node type: {}. Ignoring node", typeString);
-                element.read("id", Uuids.CODEC).ifPresent(ignoredIds::add);
+                element.read("id", UUIDUtil.AUTHLIB_CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             if (!env.isAllowedNodeType(type.get())) {
                 NodeFlow.LOGGER.warn("Unsupported node type: {}. Ignoring node", typeString);
-                element.read("id", Uuids.CODEC).ifPresent(ignoredIds::add);
+                element.read("id", UUIDUtil.AUTHLIB_CODEC).ifPresent(ignoredIds::add);
                 continue;
             }
             var node = type.get().generator().apply(this);
@@ -231,7 +230,7 @@ public class Graph {
         for (Node node : nodes.values()) {
             var errors = node.validate();
             if (!errors.isEmpty()) {
-                return List.of(EvaluationError.Type.INVALID_CONFIG.error(errors.getFirst().copy().formatted(Formatting.YELLOW)));
+                return List.of(EvaluationError.Type.INVALID_CONFIG.error(errors.getFirst().copy().withStyle(ChatFormatting.YELLOW)));
             }
         }
 
@@ -273,7 +272,7 @@ public class Graph {
                     }
                 }
 
-                Either<DataValue<?>[], Text> either;
+                Either<DataValue<?>[], Component> either;
                 try {
                     either = node.process(values, context);
                 } catch (RuntimeException e) {

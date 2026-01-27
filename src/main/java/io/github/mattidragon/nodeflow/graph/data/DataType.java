@@ -4,14 +4,14 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.minecraft.registry.DefaultedRegistry;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.DefaultedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 
 public record DataType<T>(int color, boolean splittable) {
-    public static final RegistryKey<Registry<DataType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("data_type"));
+    public static final ResourceKey<Registry<DataType<?>>> KEY = ResourceKey.createRegistryKey(NodeFlow.id("data_type"));
     public static final DefaultedRegistry<DataType<?>> REGISTRY = FabricRegistryBuilder.createDefaulted(KEY, NodeFlow.id("number")).buildAndRegister();
 
     public static final DataType<Double> NUMBER = register(new DataType<>(0x5555ff, true), NodeFlow.id("number"));
@@ -40,17 +40,17 @@ public record DataType<T>(int color, boolean splittable) {
         return new Connector<>(this, name, true, true, parent);
     }
 
-    public static <T> DataType<T> register(DataType<T> type, Identifier id) {
+    public static <T> DataType<T> register(DataType<T> type, ResourceLocation id) {
         Registry.register(REGISTRY, id, type);
         return type;
     }
 
-    public Text name() {
-        return Text.translatable(REGISTRY.getId(this).toTranslationKey("data_type"));
+    public Component name() {
+        return Component.translatable(REGISTRY.getKey(this).toLanguageKey("data_type"));
     }
 
     @Override
     public String toString() {
-        return REGISTRY.getId(this).toString();
+        return REGISTRY.getKey(this).toString();
     }
 }

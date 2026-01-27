@@ -5,10 +5,9 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-
 import java.util.List;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public abstract class TypedNode extends Node {
     protected DataType<?> type;
@@ -32,14 +31,14 @@ public abstract class TypedNode extends Node {
     }
 
     @Override
-    public void readData(ReadView view) {
+    public void readData(ValueInput view) {
         super.readData(view);
-        type = view.read("data_type", DataType.REGISTRY.getCodec()).orElseGet(this::getDefaultType);
+        type = view.read("data_type", DataType.REGISTRY.byNameCodec()).orElseGet(this::getDefaultType);
     }
 
     @Override
-    public void writeData(WriteView view) {
+    public void writeData(ValueOutput view) {
         super.writeData(view);
-        view.putString("data_type", DataType.REGISTRY.getId(type).toString());
+        view.putString("data_type", DataType.REGISTRY.getKey(type).toString());
     }
 }

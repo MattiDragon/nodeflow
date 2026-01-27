@@ -4,31 +4,31 @@ import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 
-public record GraphSyncPacket(NbtCompound nbt, byte syncId) implements CustomPayload {
-    public static final Identifier GRAPH_SYNC_ID = NodeFlow.id("graph_sync");
-    public static final Id<GraphSyncPacket> ID = new Id<>(GRAPH_SYNC_ID);
-    public static final PacketCodec<PacketByteBuf, GraphSyncPacket> CODEC = 
-            PacketCodec.tuple(PacketCodecs.NBT_COMPOUND, GraphSyncPacket::nbt, PacketCodecs.BYTE, GraphSyncPacket::syncId, GraphSyncPacket::new);
+public record GraphSyncPacket(CompoundTag nbt, byte syncId) implements CustomPacketPayload {
+    public static final ResourceLocation GRAPH_SYNC_ID = NodeFlow.id("graph_sync");
+    public static final Type<GraphSyncPacket> ID = new Type<>(GRAPH_SYNC_ID);
+    public static final StreamCodec<FriendlyByteBuf, GraphSyncPacket> CODEC = 
+            StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, GraphSyncPacket::nbt, ByteBufCodecs.BYTE, GraphSyncPacket::syncId, GraphSyncPacket::new);
 
     public static void register() {
         PayloadTypeRegistry.playC2S().register(ID, CODEC);
         ServerPlayNetworking.registerGlobalReceiver(ID, (payload, context) -> {
             var player = context.player();
-            if (player.currentScreenHandler.syncId == payload.syncId && player.currentScreenHandler instanceof EditorScreenHandler screenHandler) {
-                screenHandler.graph.readNbt(payload.nbt, player.getWorld().getRegistryManager());
+            if (player.containerMenu.containerId == payload.syncId && player.containerMenu instanceof EditorScreenHandler screenHandler) {
+                screenHandler.graph.readNbt(payload.nbt, player.level().registryAccess());
             }
         });
     }
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

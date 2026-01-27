@@ -6,15 +6,15 @@ import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.context.Context;
 import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Uuids;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public abstract class Node {
     public UUID id = UUID.randomUUID();
@@ -40,18 +40,18 @@ public abstract class Node {
         return graph;
     }
 
-    public final Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, Context context) {
+    public final Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, Context context) {
         return process(inputs, new ContextProvider(context));
     }
 
-    protected abstract Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context);
+    protected abstract Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context);
 
     /**
      * Validates this nodes configuration as well as possible.
      *
      * @return A list of all errors detected, may only contain some errors as long as others appear once they are fixed.
      */
-    public List<Text> validate() {
+    public List<Component> validate() {
         return List.of();
     }
 
@@ -69,17 +69,17 @@ public abstract class Node {
         return true;
     }
 
-    public void readData(ReadView view) {
-        view.read("id", Uuids.CODEC).ifPresent(newId -> id = newId);
-        guiX = view.getInt("guiX", 0);
-        guiY = view.getInt("guiY", 0);
-        tag = NodeTag.fromString(view.getString("tag", ""));
-        nickname = view.getString("nickname", nickname);
+    public void readData(ValueInput view) {
+        view.read("id", UUIDUtil.AUTHLIB_CODEC).ifPresent(newId -> id = newId);
+        guiX = view.getIntOr("guiX", 0);
+        guiY = view.getIntOr("guiY", 0);
+        tag = NodeTag.fromString(view.getStringOr("tag", ""));
+        nickname = view.getStringOr("nickname", nickname);
     }
 
-    public void writeData(WriteView view) {
-        view.putString("type", NodeType.REGISTRY.getId(type).toString());
-        view.put("id", Uuids.CODEC, id);
+    public void writeData(ValueOutput view) {
+        view.putString("type", NodeType.REGISTRY.getKey(type).toString());
+        view.store("id", UUIDUtil.AUTHLIB_CODEC, id);
         view.putInt("guiX", guiX);
         view.putInt("guiY", guiY);
         view.putString("tag", tag.asString());
@@ -87,9 +87,9 @@ public abstract class Node {
             view.putString("nickname", nickname);
     }
 
-    public final Text getName() {
+    public final Component getName() {
         if (nickname != null) {
-            return Text.literal(nickname).formatted(Formatting.ITALIC);
+            return Component.literal(nickname).withStyle(ChatFormatting.ITALIC);
         }
         return type.name();
     }

@@ -2,39 +2,38 @@ package io.github.mattidragon.nodeflow.graph.node.group;
 
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import net.minecraft.core.Holder;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 
 /**
  * A node group that is defined in a tag file from datapacks.
  */
 public record TagNodeGroup(TagKey<NodeType<?>> tag) implements NodeGroup {
-    public static final Identifier DECODER_ID = NodeFlow.id("tag");
-    public static final PacketCodec<PacketByteBuf, TagNodeGroup> CODEC = 
-            PacketCodec.tuple(Identifier.PACKET_CODEC.xmap(id -> TagKey.of(NodeType.KEY, id), TagKey::id), TagNodeGroup::tag, TagNodeGroup::new);
+    public static final ResourceLocation DECODER_ID = NodeFlow.id("tag");
+    public static final StreamCodec<FriendlyByteBuf, TagNodeGroup> CODEC = 
+            StreamCodec.composite(ResourceLocation.STREAM_CODEC.map(id -> TagKey.create(NodeType.KEY, id), TagKey::location), TagNodeGroup::tag, TagNodeGroup::new);
 
     @Override
-    public Text getName() {
-        return Text.translatable(tag.id().toTranslationKey("group"));
+    public Component getName() {
+        return Component.translatable(tag.location().toLanguageKey("group"));
     }
 
     @Override
     public List<NodeType<?>> getTypes() {
-        return StreamSupport.stream(NodeType.REGISTRY.iterateEntries(tag).spliterator(), false)
-                .map(RegistryEntry::value)
+        return StreamSupport.stream(NodeType.REGISTRY.getTagOrEmpty(tag).spliterator(), false)
+                .map(Holder::value)
                 .collect(Collectors.toList()); // toList gives generics error
     }
 
     @Override
-    public Identifier getCodecId() {
+    public ResourceLocation getCodecId() {
         return DECODER_ID;
     }
 }

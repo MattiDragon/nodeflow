@@ -6,9 +6,8 @@ import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class ConstantNode extends Node {
     private final DataValue<?> value;
@@ -37,7 +36,7 @@ public class ConstantNode extends Node {
     }
 
     @Override
-    protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
-        return Either.<DataValue<?>[], Text>left(new DataValue[]{value});
+    protected Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context) {
+        return Either.<DataValue<?>[], Component>left(new DataValue[]{value});
     }
 }

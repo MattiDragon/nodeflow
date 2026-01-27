@@ -5,12 +5,12 @@ import io.github.mattidragon.nodeflow.graph.context.ContextType;
 import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 /**
  * Contains info about an environment in which graphs exist. For most use cases there should only be need for a single environment per system using nodeflow, but if you, for example, would like some nodes to unlockable as part of you mods progressions you can make a new environment for each usage.
@@ -19,10 +19,10 @@ import java.util.*;
  * @param groups A list of groups nodes should be put in. Nodes without a group will be placed in a 'misc' group.
  */
 public record GraphEnvironment(List<DataType<?>> allowedDataTypes, List<ContextType<?>> availableContexts, List<NodeGroup> groups) {
-    public static final PacketCodec<RegistryByteBuf, GraphEnvironment> PACKET_CODEC = PacketCodec.tuple(
-            PacketCodecs.registryValue(DataType.REGISTRY.getKey()).collect(PacketCodecs.toList()), GraphEnvironment::allowedDataTypes,
-            PacketCodecs.registryValue(ContextType.KEY).collect(PacketCodecs.toList()), GraphEnvironment::availableContexts,
-            NodeGroup.CODEC.collect(PacketCodecs.toList()), GraphEnvironment::groups,
+    public static final StreamCodec<RegistryFriendlyByteBuf, GraphEnvironment> PACKET_CODEC = StreamCodec.composite(
+            ByteBufCodecs.registry(DataType.REGISTRY.key()).apply(ByteBufCodecs.list()), GraphEnvironment::allowedDataTypes,
+            ByteBufCodecs.registry(ContextType.KEY).apply(ByteBufCodecs.list()), GraphEnvironment::availableContexts,
+            NodeGroup.CODEC.apply(ByteBufCodecs.list()), GraphEnvironment::groups,
             GraphEnvironment::new
     );
     

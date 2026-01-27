@@ -1,24 +1,24 @@
 package io.github.mattidragon.nodeflow.client.ui;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.toast.Toast;
-import net.minecraft.client.toast.ToastManager;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.toasts.Toast;
+import net.minecraft.client.gui.components.toasts.ToastManager;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class MessageToast implements Toast {
-    private static final Identifier TEXTURE = Identifier.ofVanilla("toast/advancement");
-    private final Text title;
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("toast/advancement");
+    private final Component title;
     private Visibility visibility = Visibility.SHOW;
 
-    public MessageToast(Text title) {
+    public MessageToast(Component title) {
         this.title = title;
     }
 
     @Override
-    public Visibility getVisibility() {
+    public Visibility getWantedVisibility() {
         return visibility;
     }
 
@@ -28,14 +28,14 @@ public class MessageToast implements Toast {
     }
 
     @Override
-    public void draw(DrawContext context, TextRenderer textRenderer, long startTime) {
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, this.getWidth(), this.getHeight());
-        var text = textRenderer.wrapLines(title, 140);
+    public void render(GuiGraphics context, Font textRenderer, long startTime) {
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, this.width(), this.height());
+        var text = textRenderer.split(title, 140);
         if (text.size() == 1) {
-            context.drawText(textRenderer, text.getFirst(), 7, 13, 0xffffffff, false);
+            context.drawString(textRenderer, text.getFirst(), 7, 13, 0xffffffff, false);
         } else {
             for (var i = 0; i < text.size(); ++i) {
-                context.drawText(textRenderer, text.get(i), 7, (7 + i * 12), 0xffffffff, false);
+                context.drawString(textRenderer, text.get(i), 7, (7 + i * 12), 0xffffffff, false);
             }
         }
     }

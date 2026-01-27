@@ -8,36 +8,36 @@ import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.navigation.GuiNavigation;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 
 public class EditorScreen extends Screen {
-    private static final Identifier DEFAULT_TEXTURE = NodeFlow.id("textures/gui/editor.png");
+    private static final ResourceLocation DEFAULT_TEXTURE = NodeFlow.id("textures/gui/editor.png");
     public static final int TILE_SIZE = 16;
     public static final int BORDER_SIZE = 8;
     public static final int BORDER_OFFSET = 32;
     public static final int GRID_OFFSET = BORDER_OFFSET + BORDER_SIZE;
 
     public final Graph graph;
-    public final Identifier texture;
+    public final ResourceLocation texture;
 
     protected boolean isAddingNode = false;
     protected boolean isDeletingNode = false;
@@ -45,22 +45,22 @@ public class EditorScreen extends Screen {
     protected long lastHoveredTimestamp = 0;
     public @Nullable Connector<?> connectingConnector;
 
-    public ButtonWidget backButton;
-    protected final Map<NodeGroup, List<ButtonWidget>> nodeButtons = new HashMap<>();
-    protected final List<ButtonWidget> groupButtons = new ArrayList<>();
+    public Button backButton;
+    protected final Map<NodeGroup, List<Button>> nodeButtons = new HashMap<>();
+    protected final List<Button> groupButtons = new ArrayList<>();
     @Nullable
     protected NodeGroup activeGroup = null;
 
-    public ButtonWidget plusButton;
-    public ButtonWidget deleteButton;
+    public Button plusButton;
+    public Button deleteButton;
     private AddNodesWidget addMenu;
     protected EditorAreaWidget area;
 
-    public EditorScreen(Text title, Graph graph) {
+    public EditorScreen(Component title, Graph graph) {
         this(title, graph, DEFAULT_TEXTURE);
     }
 
-    public EditorScreen(Text title, Graph graph, Identifier texture) {
+    public EditorScreen(Component title, Graph graph, ResourceLocation texture) {
         super(title);
         this.graph = graph;
         this.texture = texture;
@@ -72,20 +72,20 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public <T extends Element & Drawable & Selectable> T addDrawableChild(T drawableElement) {
-        return super.addDrawableChild(drawableElement);
+    public <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(T drawableElement) {
+        return super.addRenderableWidget(drawableElement);
     }
 
     private void addGroup(Graph graph, NodeGroup group) {
-        groupButtons.add(ButtonWidget.builder(group.getName(), button -> {
+        groupButtons.add(Button.builder(group.getName(), button -> {
             activeGroup = group;
             updateAddButtons();
             updateVisibility();
-        }).dimensions(0, 0, 100, 20).build());
+        }).bounds(0, 0, 100, 20).build());
 
-        var buttons = new ArrayList<ButtonWidget>();
+        var buttons = new ArrayList<Button>();
         for (var type : group.getTypes()) {
-            buttons.add(ButtonWidget.builder(type.name(), button1 -> {
+            buttons.add(Button.builder(type.name(), button1 -> {
                 toggleAddingMode();
                 var node = type.generator().apply(graph);
                 node.guiX = (int) area.modifyX(width / 2.0);
@@ -95,29 +95,29 @@ public class EditorScreen extends Screen {
                 var widget = new NodeWidget(node, this);
                 area.add(widget);
                 syncGraph();
-            }).dimensions(0, 0, 100, 20).build());
+            }).bounds(0, 0, 100, 20).build());
         }
         nodeButtons.put(group, buttons);
     }
 
     @Override
     protected void init() {
-        area = addDrawableChild(new EditorAreaWidget(GRID_OFFSET, GRID_OFFSET, getBoxWidth(), getBoxHeight(), this));
+        area = addRenderableWidget(new EditorAreaWidget(GRID_OFFSET, GRID_OFFSET, getBoxWidth(), getBoxHeight(), this));
         area.children().clear();
         for (var node : graph.getNodes()) {
             var widget = new NodeWidget(node, this);
             area.add(widget);
         }
 
-        plusButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button -> toggleAddingMode()).dimensions(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20).build());
-        deleteButton = addDrawableChild(ButtonWidget.builder(Text.empty(), button1 -> toggleDeletingMode()).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
-        backButton = addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, button -> {
+        plusButton = addRenderableWidget(Button.builder(Component.empty(), button -> toggleAddingMode()).bounds(GRID_OFFSET, BORDER_OFFSET - 20, 100, 20).build());
+        deleteButton = addRenderableWidget(Button.builder(Component.empty(), button1 -> toggleDeletingMode()).bounds(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
+        backButton = addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, button -> {
             activeGroup = null;
             updateAddButtons();
             updateVisibility();
-        }).dimensions(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
+        }).bounds(GRID_OFFSET + 110, BORDER_OFFSET - 20, 100, 20).build());
 
-        addMenu = addDrawableChild(new AddNodesWidget(client, getBoxWidth(), getBoxHeight() - 10, GRID_OFFSET + 10));
+        addMenu = addRenderableWidget(new AddNodesWidget(minecraft, getBoxWidth(), getBoxHeight() - 10, GRID_OFFSET + 10));
         updateAddButtons();
         updateVisibility();
     }
@@ -126,7 +126,7 @@ public class EditorScreen extends Screen {
         var buttons = activeGroup == null ? groupButtons : nodeButtons.get(activeGroup);
 
         var entries = new ArrayList<AddNodesWidget.Entry>();
-        var currentButtons = new ArrayList<ButtonWidget>();
+        var currentButtons = new ArrayList<Button>();
         for (var button : buttons) {
             currentButtons.add(button);
             if (currentButtons.size() >= addMenu.getButtonCount()) {
@@ -138,7 +138,7 @@ public class EditorScreen extends Screen {
             entries.add(new AddNodesWidget.Entry(currentButtons));
         }
         addMenu.replaceEntries(entries);
-        addMenu.setScrollY(0);
+        addMenu.setScrollAmount(0);
     }
 
     public void syncGraph() {}
@@ -170,8 +170,8 @@ public class EditorScreen extends Screen {
         plusButton.visible = !isDeletingNode;
         //area.visible = !isAddingNode;
         area.active = !isAddingNode;
-        deleteButton.setMessage(isDeletingNode ? ScreenTexts.CANCEL : Text.translatable("nodeflow.editor.button.delete_nodes"));
-        plusButton.setMessage(isAddingNode ? ScreenTexts.CANCEL : Text.translatable("nodeflow.editor.button.add_node"));
+        deleteButton.setMessage(isDeletingNode ? CommonComponents.GUI_CANCEL : Component.translatable("nodeflow.editor.button.delete_nodes"));
+        plusButton.setMessage(isAddingNode ? CommonComponents.GUI_CANCEL : Component.translatable("nodeflow.editor.button.add_node"));
     }
 
     public void removeNode(NodeWidget node) {
@@ -192,15 +192,15 @@ public class EditorScreen extends Screen {
 
         if (connectingConnector.isOutput() == row.isOutput()) {
             if (row.isOutput()) {
-                showToast(Text.translatable("nodeflow.editor.toast.two_outputs").formatted(Formatting.RED));
+                showToast(Component.translatable("nodeflow.editor.toast.two_outputs").withStyle(ChatFormatting.RED));
             } else {
-                showToast(Text.translatable("nodeflow.editor.toast.two_inputs").formatted(Formatting.RED));
+                showToast(Component.translatable("nodeflow.editor.toast.two_inputs").withStyle(ChatFormatting.RED));
             }
             return;
         }
 
         if (connectingConnector.type() != row.type()) {
-            showToast(Text.translatable("nodeflow.editor.toast.different_type").formatted(Formatting.RED));
+            showToast(Component.translatable("nodeflow.editor.toast.different_type").withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -223,7 +223,7 @@ public class EditorScreen extends Screen {
         while (!stack.isEmpty()) {
             var element = stack.pop();
             if (element.equals(searchTarget) || element.equals(searchStarter)) {
-                showToast(Text.translatable("nodeflow.editor.toast.recursion").formatted(Formatting.RED));
+                showToast(Component.translatable("nodeflow.editor.toast.recursion").withStyle(ChatFormatting.RED));
                 graph.removeConnections(connectingConnector);
                 return;
             }
@@ -236,7 +236,7 @@ public class EditorScreen extends Screen {
                     .forEach(stack::push);
         }
 
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1f));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
 
     }
 
@@ -274,11 +274,11 @@ public class EditorScreen extends Screen {
     public void mouseMoved(double mouseX, double mouseY) {
         if (isAddingNode) return;
         var connector = findConnectorAt(mouseX, mouseY);
-        if (connector == null || client == null) return;
+        if (connector == null || minecraft == null) return;
 
-        long time = client.world == null ? 0 : client.world.getTime();
+        long time = minecraft.level == null ? 0 : minecraft.level.getGameTime();
         if (!connector.equals(lastHoveredConnector) || time - lastHoveredTimestamp > 10) {
-            MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.7f));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.7f));
         }
         lastHoveredConnector = connector;
         lastHoveredTimestamp = time;
@@ -332,32 +332,32 @@ public class EditorScreen extends Screen {
         return (this.height - GRID_OFFSET * 2) / TILE_SIZE * TILE_SIZE;
     }
 
-    public void showToast(Text message) {
-        MinecraftClient.getInstance().getToastManager().add(new MessageToast(message));
+    public void showToast(Component message) {
+        Minecraft.getInstance().getToastManager().addToast(new MessageToast(message));
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public void close() {
-        super.close();
-        if (client != null && client.player != null) {
-            client.player.closeHandledScreen();
+    public void onClose() {
+        super.onClose();
+        if (minecraft != null && minecraft.player != null) {
+            minecraft.player.closeContainer();
         }
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.renderBackground(context, mouseX, mouseY, delta);
         renderArea(context);
     }
 
-    private void renderArea(DrawContext context) {
-        var texture = area.isFocused() && client != null && client.getNavigationType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
+    private void renderArea(GuiGraphics context) {
+        var texture = area.isFocused() && minecraft != null && minecraft.getLastInputType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
     }
 
     public boolean isDeletingNode() {
@@ -369,35 +369,35 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public void setFocused(@Nullable Element focused) {
+    public void setFocused(@Nullable GuiEventListener focused) {
         if (focused == getFocused()) return;
         super.setFocused(focused);
     }
 
-    private static class AddNodesWidget extends ElementListWidget<AddNodesWidget.Entry> {
-        public AddNodesWidget(MinecraftClient client, int width, int height, int y) {
+    private static class AddNodesWidget extends ContainerObjectSelectionList<AddNodesWidget.Entry> {
+        public AddNodesWidget(Minecraft client, int width, int height, int y) {
             super(client, width, height, y, 30);
             centerListVertically = true;
             setX(GRID_OFFSET);
         }
 
         @Override
-        public void replaceEntries(Collection<Entry> newEntries) {
+        public void replaceEntries(Collection<io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen.AddNodesWidget.Entry> newEntries) {
             super.replaceEntries(newEntries);
         }
 
         @Override
-        public int addEntry(Entry entry) {
+        public int addEntry(io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen.AddNodesWidget.Entry entry) {
             return super.addEntry(entry);
         }
 
         @Override
-        protected void drawHeaderAndFooterSeparators(DrawContext context) {
+        protected void renderListSeparators(GuiGraphics context) {
             // Overridden to disable background
         }
 
         @Override
-        protected void drawMenuListBackground(DrawContext context) {
+        protected void renderListBackground(GuiGraphics context) {
             // Overridden to disable background
         }
 
@@ -411,7 +411,7 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarX() {
+        protected int scrollBarX() {
             return (width / 2) + (getRowWidth() / 2) + GRID_OFFSET + 10;
         }
 
@@ -422,40 +422,40 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        protected void renderList(DrawContext context, int mouseX, int mouseY, float delta) {
+        protected void renderListItems(GuiGraphics context, int mouseX, int mouseY, float delta) {
             context.enableScissor(0, getY(), width + GRID_OFFSET, height + getY());
-            super.renderList(context, mouseX, mouseY, delta);
+            super.renderListItems(context, mouseX, mouseY, delta);
             context.disableScissor();
         }
 
         @Nullable
         @Override
-        public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+        public ComponentPath nextFocusPath(FocusNavigationEvent navigation) {
             if (!active) return null;
 
-            return super.getNavigationPath(navigation);
+            return super.nextFocusPath(navigation);
         }
 
-        private static class Entry extends ElementListWidget.Entry<Entry> {
-            private final List<ButtonWidget> buttons;
+        private static class Entry extends ContainerObjectSelectionList.Entry<io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen.AddNodesWidget.Entry> {
+            private final List<Button> buttons;
 
-            public Entry(List<ButtonWidget> buttons) {
+            public Entry(List<Button> buttons) {
                 super();
                 this.buttons = buttons;
             }
 
             @Override
-            public List<? extends Selectable> selectableChildren() {
+            public List<? extends NarratableEntry> narratables() {
                 return buttons;
             }
 
             @Override
-            public List<? extends Element> children() {
+            public List<? extends GuiEventListener> children() {
                 return buttons;
             }
 
             @Override
-            public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
+            public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
                     button.setY(y);

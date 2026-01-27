@@ -11,16 +11,15 @@ import io.github.mattidragon.nodeflow.graph.node.builtin.base.BinaryOperationNod
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.ConstantNode;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.UnaryOperationNode;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.minecraft.registry.DefaultedRegistry;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.core.DefaultedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import java.util.function.Function;
 
 public record NodeType<T extends Node>(Function<Graph, T> generator) {
-    public static final RegistryKey<Registry<NodeType<?>>> KEY = RegistryKey.ofRegistry(NodeFlow.id("node_type"));
+    public static final ResourceKey<Registry<NodeType<?>>> KEY = ResourceKey.createRegistryKey(NodeFlow.id("node_type"));
     public static final DefaultedRegistry<NodeType<?>> REGISTRY = FabricRegistryBuilder.createDefaulted(KEY, NodeFlow.id("time")).buildAndRegister();
 
     public static final NodeType<SendNumberNode> BROADCAST = register(new NodeType<>(SendNumberNode::new), NodeFlow.id("broadcast"));
@@ -81,17 +80,17 @@ public record NodeType<T extends Node>(Function<Graph, T> generator) {
 
     public static void register() {}
 
-    public static <T extends Node> NodeType<T> register(NodeType<T> type, Identifier id) {
+    public static <T extends Node> NodeType<T> register(NodeType<T> type, ResourceLocation id) {
         Registry.register(REGISTRY, id, type);
         return type;
     }
 
-    public Text name() {
-        return Text.translatable("node." + REGISTRY.getId(this).toTranslationKey());
+    public Component name() {
+        return Component.translatable("node." + REGISTRY.getKey(this).toLanguageKey());
     }
 
     @Override
     public String toString() {
-        return REGISTRY.getId(this).toString();
+        return REGISTRY.getKey(this).toString();
     }
 }

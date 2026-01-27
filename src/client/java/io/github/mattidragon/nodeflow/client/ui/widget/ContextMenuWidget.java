@@ -3,29 +3,29 @@ package io.github.mattidragon.nodeflow.client.ui.widget;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.NodeConfigScreenRegistry;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.AbstractParentElement;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.navigation.GuiNavigation;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
-public class ContextMenuWidget extends AbstractParentElement implements Drawable {
+public class ContextMenuWidget extends AbstractContainerEventHandler implements Renderable {
     private final EditorAreaWidget area;
     public NodeWidget node;
-    public final List<ClickableWidget> widgets = new ArrayList<>();
+    public final List<AbstractWidget> widgets = new ArrayList<>();
 
     public ContextMenuWidget(EditorAreaWidget area) {
         this.area = area;
@@ -34,36 +34,36 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
     public void show(int x, int y, @Nullable NodeWidget node) {
         hide();
 
-        widgets.add(ButtonWidget.builder(ScreenTexts.CANCEL, __ -> hide()).size(100, 12).build());
+        widgets.add(Button.builder(CommonComponents.GUI_CANCEL, __ -> hide()).size(100, 12).build());
         if (node != null) {
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.duplicate"), __ -> area.duplicateNode())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.duplicate"), __ -> area.duplicateNode())
                     .size(100, 12)
                     .build());
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.delete"), __ -> area.deleteNode())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.delete"), __ -> area.deleteNode())
                     .size(100, 12)
                     .build());
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.copy"), __ -> area.copyNode())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.copy"), __ -> area.copyNode())
                     .size(100, 12)
                     .build());
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> area.pasteNode(x, y))
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.paste"), __ -> area.pasteNode(x, y))
                     .size(100, 12)
                     .build());
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.cut"), __ -> area.cutNode())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.cut"), __ -> area.cutNode())
                     .size(100, 12)
                     .build());
             if (NodeConfigScreenRegistry.hasConfig(node.node)) {
-                widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.configure"), __ -> area.configureNode())
+                widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.configure"), __ -> area.configureNode())
                         .size(100, 12)
                         .build());
             }
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.tag"), __ -> setupTagging())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.tag"), __ -> setupTagging())
                     .size(100, 12)
                     .build());
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.name"), __ -> setupNaming())
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.name"), __ -> setupNaming())
                     .size(100, 12)
                     .build());
         } else {
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.paste"), __ -> area.pasteNode(x, y))
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.paste"), __ -> area.pasteNode(x, y))
                     .size(100, 12)
                     .build());
         }
@@ -74,8 +74,8 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
     }
 
     private void positionWidgets(int x, int y) {
-        var totalHeight = widgets.stream().mapToInt(ClickableWidget::getHeight).sum();
-        var screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        var totalHeight = widgets.stream().mapToInt(AbstractWidget::getHeight).sum();
+        var screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
         var currentY = Math.min(y, screenHeight - totalHeight - 10);
         for (var button : widgets) {
@@ -101,13 +101,13 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
         var x = widgets.get(0).getX();
         var y = widgets.get(0).getY();
         widgets.clear();
-        widgets.add(ButtonWidget.builder(ScreenTexts.BACK, __ -> show(x, y, node))
+        widgets.add(Button.builder(CommonComponents.GUI_BACK, __ -> show(x, y, node))
                 .size(100, 12)
                 .build());
 
         for (var tag : NodeTag.values()) {
-            var text = Text.empty().append(Text.literal("■ ").setStyle(Style.EMPTY.withColor(tag.getColor()))).append(Text.translatable("nodeflow.editor.node_tag." + tag.asString()));
-            widgets.add(ButtonWidget.builder(text, __ -> area.tagNode(tag))
+            var text = Component.empty().append(Component.literal("■ ").setStyle(Style.EMPTY.withColor(tag.getColor()))).append(Component.translatable("nodeflow.editor.node_tag." + tag.asString()));
+            widgets.add(Button.builder(text, __ -> area.tagNode(tag))
                     .size(100, 12)
                     .build());
         }
@@ -122,24 +122,24 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
         var x = widgets.get(0).getX();
         var y = widgets.get(0).getY();
         widgets.clear();
-        widgets.add(ButtonWidget.builder(ScreenTexts.BACK, __ -> show(x, y, node))
+        widgets.add(Button.builder(CommonComponents.GUI_BACK, __ -> show(x, y, node))
                 .size(100, 12)
                 .build());
         if (node.node.nickname != null) {
-            widgets.add(ButtonWidget.builder(Text.translatable("nodeflow.editor.button.clear_name"), __ -> area.renameNode(null))
+            widgets.add(Button.builder(Component.translatable("nodeflow.editor.button.clear_name"), __ -> area.renameNode(null))
                     .size(100, 12)
                     .build());
         }
-        var textRenderer = MinecraftClient.getInstance().textRenderer;
-        var textField = new TextFieldWidget(textRenderer, 100, 20, Text.empty());
-        textField.setPlaceholder(Text.translatable("nodeflow.editor.button.nick_placeholder").formatted(Formatting.GRAY));
+        var textRenderer = Minecraft.getInstance().font;
+        var textField = new EditBox(textRenderer, 100, 20, Component.empty());
+        textField.setHint(Component.translatable("nodeflow.editor.button.nick_placeholder").withStyle(ChatFormatting.GRAY));
         textField.setMaxLength(16);
         if (node.node.nickname != null) {
-            textField.setText(node.node.nickname);
+            textField.setValue(node.node.nickname);
         }
         widgets.add(textField);
 
-        widgets.add(ButtonWidget.builder(ScreenTexts.DONE, __ -> area.renameNode(textField.getText()))
+        widgets.add(Button.builder(CommonComponents.GUI_DONE, __ -> area.renameNode(textField.getValue()))
                 .size(100, 12)
                 .build());
         positionWidgets(x, y);
@@ -150,12 +150,12 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return widgets;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         for (var button : widgets) {
             button.render(context, mouseX, mouseY, delta);
         }
@@ -185,8 +185,8 @@ public class ContextMenuWidget extends AbstractParentElement implements Drawable
 
     @Nullable
     @Override
-    public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
-        var path = super.getNavigationPath(navigation);
+    public ComponentPath nextFocusPath(FocusNavigationEvent navigation) {
+        var path = super.nextFocusPath(navigation);
         if (path == null) hide();
         return path;
     }

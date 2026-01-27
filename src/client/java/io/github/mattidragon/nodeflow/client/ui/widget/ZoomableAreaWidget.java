@@ -2,10 +2,15 @@ package io.github.mattidragon.nodeflow.client.ui.widget;
 
 import com.google.common.collect.Lists;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.navigation.GuiNavigation;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarrationSupplier;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,7 +23,7 @@ import java.util.List;
  * @author MattiDragon
  * @version 1.0.2
  */
-public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> extends AbstractParentElement implements Drawable, Selectable {
+public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & NarrationSupplier> extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
     private final List<T> children = new ArrayList<>();
 
     public final int x;
@@ -69,7 +74,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         var anchorX = modifyX(x);
         var anchorY = modifyY(y);
         zoom += amount;
-        zoom = MathHelper.clamp(zoom, -5, 5);
+        zoom = Mth.clamp(zoom, -5, 5);
         scale = Float.NaN;
         this.viewX = -(anchorX * getScale() - x + this.x + this.width / 2.0);
         this.viewY = -(anchorY * getScale() - y + this.y + this.height / 2.0);
@@ -191,9 +196,9 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         if (!visible) return;
-        var matrices = context.getMatrices();
+        var matrices = context.pose();
         context.enableScissor(x, y, x + width, y + height);
         matrices.pushMatrix();
         matrices.translate(x, y);
@@ -211,7 +216,7 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
         context.disableScissor();
     }
 
-    protected void renderExtras(DrawContext matrices, int mouseX, int mouseY, float delta) {}
+    protected void renderExtras(GuiGraphics matrices, int mouseX, int mouseY, float delta) {}
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
@@ -219,24 +224,24 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
     }
 
     @Override
-    public ScreenRect getNavigationFocus() {
-        return new ScreenRect(x, y, width, height);
+    public ScreenRectangle getRectangle() {
+        return new ScreenRectangle(x, y, width, height);
     }
 
     @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
-        if (getFocused() instanceof Narratable narratable)
-            narratable.appendNarrations(builder);
+    public void updateNarration(NarrationElementOutput builder) {
+        if (getFocused() instanceof NarrationSupplier narratable)
+            narratable.updateNarration(builder);
     }
 
     @Override
-    public boolean isNarratable() {
+    public boolean isActive() {
         return active && visible;
     }
 
     @Override
-    public SelectionType getType() {
-        return SelectionType.FOCUSED;
+    public NarrationPriority narrationPriority() {
+        return NarrationPriority.FOCUSED;
     }
 
     public double getViewX() {
@@ -261,18 +266,18 @@ public class ZoomableAreaWidget<T extends Element & Drawable & Narratable> exten
 
     @Nullable
     @Override
-    public GuiNavigationPath getFocusedPath() {
-        return this.getFocused() == null ? GuiNavigationPath.of(this) : super.getFocusedPath();
+    public ComponentPath getCurrentFocusPath() {
+        return this.getFocused() == null ? ComponentPath.leaf(this) : super.getCurrentFocusPath();
     }
 
     @Nullable
     @Override
-    public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+    public ComponentPath nextFocusPath(FocusNavigationEvent navigation) {
         if (!active) return null;
-        if (!this.isFocused()) return GuiNavigationPath.of(this);
-        if (getFocused() == null && navigation.equals(new GuiNavigation.Tab(false))) return null;
+        if (!this.isFocused()) return ComponentPath.leaf(this);
+        if (getFocused() == null && navigation.equals(new FocusNavigationEvent.TabNavigation(false))) return null;
 
-        return super.getNavigationPath(navigation);
+        return super.nextFocusPath(navigation);
     }
 
     @Override

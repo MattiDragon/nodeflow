@@ -1,0 +1,15 @@
+[versions]
+minecraft = "1.21.6"
+fabric_loader = "0.16.14"
+fabric_api = "0.127.0+1.21.6"
+fabric_loom = "1.15-SNAPSHOT"
+controlify = "2.0.4+1.21.5-fabric"
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric_loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric_api" }
+controlify = { module = "dev.isxander:controlify", version.ref = "controlify" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom-remap", version.ref = "fabric_loom" }

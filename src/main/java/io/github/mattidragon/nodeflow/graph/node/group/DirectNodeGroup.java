@@ -2,33 +2,32 @@ package io.github.mattidragon.nodeflow.graph.node.group;
 
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.Identifier;
-
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 
-public record DirectNodeGroup(Text name, List<NodeType<?>> types) implements NodeGroup {
-    public static final Identifier DECODER_ID = NodeFlow.id("direct");
-    public static final PacketCodec<RegistryByteBuf, DirectNodeGroup> CODEC =
-            PacketCodec.tuple(TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC, DirectNodeGroup::name, 
-                    PacketCodecs.registryValue(NodeType.REGISTRY.getKey()).collect(PacketCodecs.toList()), DirectNodeGroup::types,
+public record DirectNodeGroup(Component name, List<NodeType<?>> types) implements NodeGroup {
+    public static final ResourceLocation DECODER_ID = NodeFlow.id("direct");
+    public static final StreamCodec<RegistryFriendlyByteBuf, DirectNodeGroup> CODEC =
+            StreamCodec.composite(ComponentSerialization.TRUSTED_STREAM_CODEC, DirectNodeGroup::name, 
+                    ByteBufCodecs.registry(NodeType.REGISTRY.key()).apply(ByteBufCodecs.list()), DirectNodeGroup::types,
                     DirectNodeGroup::new);
 
-    public DirectNodeGroup(Text name, NodeType<?>... types) {
+    public DirectNodeGroup(Component name, NodeType<?>... types) {
         this(name, Arrays.asList(types));
     }
 
     public static DirectNodeGroup misc(NodeType<?>... types) {
-        return new DirectNodeGroup(Text.translatable("group.nodeflow.misc"), types);
+        return new DirectNodeGroup(Component.translatable("group.nodeflow.misc"), types);
     }
 
     @Override
-    public Text getName() {
+    public Component getName() {
         return name;
     }
 
@@ -38,7 +37,7 @@ public record DirectNodeGroup(Text name, List<NodeType<?>> types) implements Nod
     }
 
     @Override
-    public Identifier getCodecId() {
+    public ResourceLocation getCodecId() {
         return DECODER_ID;
     }
 }

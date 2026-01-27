@@ -11,9 +11,9 @@ import io.github.mattidragon.nodeflow.misc.GraphSyncPacket;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +23,13 @@ public class NodeFlow implements ModInitializer {
 
     public static final ExtendedScreenHandlerType<EditorScreenHandler, Graph> SCREEN_HANDLER = new ExtendedScreenHandlerType<>(EditorScreenHandler::new, Graph.PACKET_CODEC);
 
-    public static Identifier id(String path) {
-        return Identifier.of(MOD_ID, path);
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     @Override
     public void onInitialize() {
-        Registry.register(Registries.SCREEN_HANDLER, id("editor_screen"), SCREEN_HANDLER);
+        Registry.register(BuiltInRegistries.MENU, id("editor_screen"), SCREEN_HANDLER);
         GraphSyncPacket.register();
         NodeType.register();
         DataType.register();

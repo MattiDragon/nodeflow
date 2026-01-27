@@ -7,9 +7,8 @@ import io.github.mattidragon.nodeflow.graph.data.DataType;
 import io.github.mattidragon.nodeflow.graph.data.DataValue;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import io.github.mattidragon.nodeflow.graph.node.builtin.base.TypedNode;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class SwitchNode extends TypedNode {
     public SwitchNode(Graph graph) {
@@ -31,7 +30,7 @@ public class SwitchNode extends TypedNode {
     }
 
     @Override
-    protected Either<DataValue<?>[], Text> process(DataValue<?>[] inputs, ContextProvider context) {
+    protected Either<DataValue<?>[], Component> process(DataValue<?>[] inputs, ContextProvider context) {
         return Either.left(new DataValue<?>[]{ inputs[0].getAs(DataType.BOOLEAN) ? inputs[1] : inputs[2] });
     }
 }

@@ -8,18 +8,18 @@ import io.github.mattidragon.nodeflow.graph.Connection;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.storage.NbtReadView;
-import net.minecraft.storage.NbtWriteView;
-import net.minecraft.util.ErrorReporter;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -57,17 +57,17 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             return;
         }
 
-        var staticRegistries = DynamicRegistryManager.of(Registries.REGISTRIES);
+        var staticRegistries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
 
         Node newNode;
-        try (var logging = new ErrorReporter.Logging(() -> "Node duplication", NodeFlow.LOGGER)) {
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Node duplication", NodeFlow.LOGGER)) {
             var oldNode = contextMenu.node.node;
-            var writeView = NbtWriteView.create(logging, staticRegistries);
+            var writeView = TagValueOutput.createWithContext(logging, staticRegistries);
             oldNode.writeData(writeView);
-            var nbt = writeView.getNbt();
+            var nbt = writeView.buildResult();
 
             newNode = oldNode.type.generator().apply(parent.graph);
-            var readView = NbtReadView.create(logging, staticRegistries, nbt);
+            var readView = TagValueInput.create(logging, staticRegistries, nbt);
             newNode.readData(readView);
             newNode.id = UUID.randomUUID();
             newNode.guiX = oldNode.guiX + 10;
@@ -85,11 +85,11 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked copy key without clicking node");
             return;
         }
-        NbtCompound nbt;
-        try (var logging = new ErrorReporter.Logging(() -> "Node copying", NodeFlow.LOGGER)) {
-            var writeView = NbtWriteView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES));
+        CompoundTag nbt;
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Node copying", NodeFlow.LOGGER)) {
+            var writeView = TagValueOutput.createWithContext(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
             contextMenu.node.node.writeData(writeView);
-            nbt = writeView.getNbt();
+            nbt = writeView.buildResult();
         }
         nbt.remove("guiX");
         nbt.remove("guiY");
@@ -103,7 +103,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             return;
         }
 
-        MinecraftClient.getInstance().keyboard.setClipboard(CLIPBOARD_PREFIX + bytes);
+        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
 
         contextMenu.hide();
     }
@@ -113,11 +113,11 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked cut key without clicking node");
             return;
         }
-        NbtCompound nbt;
-        try (var logging = new ErrorReporter.Logging(() -> "Node copying", NodeFlow.LOGGER)) {
-            var writeView = NbtWriteView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES));
+        CompoundTag nbt;
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Node copying", NodeFlow.LOGGER)) {
+            var writeView = TagValueOutput.createWithContext(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
             contextMenu.node.node.writeData(writeView);
-            nbt = writeView.getNbt();
+            nbt = writeView.buildResult();
         }
         nbt.remove("guiX");
         nbt.remove("guiY");
@@ -130,34 +130,34 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Failed to cut node", e);
             return;
         }
-        MinecraftClient.getInstance().keyboard.setClipboard(CLIPBOARD_PREFIX + bytes);
+        Minecraft.getInstance().keyboardHandler.setClipboard(CLIPBOARD_PREFIX + bytes);
 
         parent.removeNode(contextMenu.node);
         contextMenu.hide();
     }
 
     void pasteNode(double mouseX, double mouseY) {
-        var clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
+        var clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
         if (!clipboard.startsWith(CLIPBOARD_PREFIX))
             return;
 
-        NbtCompound nbt;
+        CompoundTag nbt;
         var bytes = new ByteArrayInputStream(clipboard.substring(CLIPBOARD_PREFIX.length()).getBytes());
         try (var in = Base64.getDecoder().wrap(bytes)) {
-            nbt = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
+            nbt = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
         } catch (IOException e) {
             NodeFlow.LOGGER.warn("Failed to paste node", e);
             return;
         }
 
-        var type = nbt.get("type", NodeType.REGISTRY.getCodec());
+        var type = nbt.read("type", NodeType.REGISTRY.byNameCodec());
         if (type.isEmpty()) {
             NodeFlow.LOGGER.warn("Failed to paste node, invalid type");
             return;
         }
         var node = type.get().generator().apply(parent.graph);
-        try (var logging = new ErrorReporter.Logging(() -> "Node pasting", NodeFlow.LOGGER)) {
-            var readView = NbtReadView.create(logging, DynamicRegistryManager.of(Registries.REGISTRIES), nbt);
+        try (var logging = new ProblemReporter.ScopedCollector(() -> "Node pasting", NodeFlow.LOGGER)) {
+            var readView = TagValueInput.create(logging, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY), nbt);
             node.readData(readView);
         }
         node.id = UUID.randomUUID();
@@ -175,7 +175,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
             NodeFlow.LOGGER.warn("Clicked dupe key without clicking node");
             return;
         }
-        MinecraftClient.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(contextMenu.node.node, parent));
+        Minecraft.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(contextMenu.node.node, parent));
         contextMenu.hide();
     }
 
@@ -271,17 +271,17 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         contextMenu.render(context, mouseX, mouseY, delta);
     }
 
     @Override
-    protected void renderExtras(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void renderExtras(GuiGraphics context, int mouseX, int mouseY, float delta) {
         renderConnectors(context, mouseX, mouseY);
     }
 
-    private void renderConnectors(DrawContext context, int mouseX, int mouseY) {
+    private void renderConnectors(GuiGraphics context, int mouseX, int mouseY) {
         if (parent.connectingConnector != null) {
             var row = parent.findSegmentAt(mouseX, mouseY);
             var targetX = (int) modifyX(mouseX);
@@ -305,7 +305,7 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         }
     }
 
-    private static void renderConnectorLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+    private static void renderConnectorLine(GuiGraphics context, int x1, int y1, int x2, int y2, int color) {
         var xOffset = (x1 - x2) / 2;
         var yOffset = y1 - y2;
 
@@ -324,35 +324,35 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (xOffset == 0) {
             // No x-offset: We render up and down connectors
             var vOffset = yOffset < 0 ? -2 : 2;
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
         } else if (xOffset > 0) {
             // Positive x-offset: We render left and right connectors
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
         } else {
             // Negative x-offset: We render left and right connectors, but different
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
         }
 
         // If the x-offset isn't zero we render the horizontal paths
         if (xOffset > 0) {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
         } else if (xOffset != 0) {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
         }
 
         // Render the vertical path
         if (yOffset == 0) {
             // Special case, not y-offset: render a horizontal square
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
         } else if (yOffset > 0) {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
         } else {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
+            context.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
         }
 
         // Render corners. If the either offset is zero then there are no corners
@@ -362,28 +362,28 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 var cornerU = xOffset < 0 ? 4 : 0;
                 if (yOffset == -1) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == -2) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
                 }
             } else {
                 // Select which set of corners to use
                 var cornerU = xOffset < 0 ? 0 : 4;
                 if (yOffset == 1) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == 2) {
                     // Special case: short y-offsets have special textures
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
+                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
                 }
             }
         }

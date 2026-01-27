@@ -15,13 +15,13 @@ import dev.isxander.controlify.virtualmouse.VirtualMouseHandler;
 import io.github.mattidragon.nodeflow.NodeFlow;
 import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.client.ui.screen.HandledEditorScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 public class ControlifyPlugin implements ControlifyProxy {
-    private static final Text NODEFLOW_CATEGORY = Text.translatable("key.categories.nodeflow");
+    private static final Component NODEFLOW_CATEGORY = Component.translatable("key.categories.nodeflow");
     private InputBindingSupplier editorUpKey;
     private InputBindingSupplier editorDownKey;
     private InputBindingSupplier editorLeftKey;
@@ -66,7 +66,7 @@ public class ControlifyPlugin implements ControlifyProxy {
         @Override
         public void onWidgetRebuild() {
             super.onWidgetRebuild();
-            ButtonGuidePredicate<ButtonWidget> predicate = button -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
+            ButtonGuidePredicate<Button> predicate = button -> !Controlify.instance().virtualMouseHandler().isVirtualMouseEnabled();
 
             ButtonGuideApi.addGuideToButton(screen.plusButton, ControlifyBindings.GUI_ABSTRACT_ACTION_1, predicate);
             ButtonGuideApi.addGuideToButton(screen.deleteButton, ControlifyBindings.GUI_ABSTRACT_ACTION_2, predicate);
@@ -81,7 +81,7 @@ public class ControlifyPlugin implements ControlifyProxy {
                 if (screen.backButton.active) {
                     screen.backButton.onPress();
                 } else {
-                    screen.close();
+                    screen.onClose();
                 }
             }
 
@@ -91,8 +91,8 @@ public class ControlifyPlugin implements ControlifyProxy {
             var area = screen.getArea();
             var impulseX = editorRightKey.on(controller).analogueNow() - editorLeftKey.on(controller).analogueNow();
             var impulseY = editorDownKey.on(controller).analogueNow() - editorUpKey.on(controller).analogueNow();
-            area.setViewX(area.getViewX() + impulseX * MathHelper.abs(impulseX) * -10f);
-            area.setViewY(area.getViewY() + impulseY * MathHelper.abs(impulseY) * -10f);
+            area.setViewX(area.getViewX() + impulseX * Mth.abs(impulseX) * -10f);
+            area.setViewY(area.getViewY() + impulseY * Mth.abs(impulseY) * -10f);
         }
 
         @Override
@@ -100,8 +100,8 @@ public class ControlifyPlugin implements ControlifyProxy {
             var area = screen.getArea();
             var impulseX = editorRightKey.on(controller).analogueNow() - editorLeftKey.on(controller).analogueNow();
             var impulseY = editorDownKey.on(controller).analogueNow() - editorUpKey.on(controller).analogueNow();
-            area.setViewX(area.getViewX() + impulseX * MathHelper.abs(impulseX) * -10f);
-            area.setViewY(area.getViewY() + impulseY * MathHelper.abs(impulseY) * -10f);
+            area.setViewX(area.getViewX() + impulseX * Mth.abs(impulseX) * -10f);
+            area.setViewY(area.getViewY() + impulseY * Mth.abs(impulseY) * -10f);
         }
     }
 }

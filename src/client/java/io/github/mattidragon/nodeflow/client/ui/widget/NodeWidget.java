@@ -6,20 +6,20 @@ import io.github.mattidragon.nodeflow.client.ui.screen.EditorScreen;
 import io.github.mattidragon.nodeflow.graph.Connector;
 import io.github.mattidragon.nodeflow.graph.node.Node;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.gui.navigation.GuiNavigation;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.input.KeyCodes;
-import net.minecraft.text.Text;
-import net.minecraft.text.Texts;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.CommonInputs;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-public class NodeWidget extends ClickableWidget {
+public class NodeWidget extends AbstractWidget {
     public static final int ROW_HEIGHT = 12;
 
     public final Node node;
@@ -47,18 +47,18 @@ public class NodeWidget extends ClickableWidget {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-        appendDefaultNarrations(builder);
+    protected void updateWidgetNarration(NarrationElementOutput builder) {
+        defaultButtonNarrationText(builder);
     }
 
-    private static int calcWidth(Node node, TextRenderer renderer) {
+    private static int calcWidth(Node node, Font renderer) {
         var fieldMax = Stream.concat(Arrays.stream(node.getInputs()), Arrays.stream(node.getOutputs()))
                 .map(Connector::id)
-                .mapToInt(renderer::getWidth)
+                .mapToInt(renderer::width)
                 .map(width -> width + 24)
                 .max()
                 .orElse(0);
-        return Math.max(fieldMax, renderer.getWidth(node.getName()) + 32);
+        return Math.max(fieldMax, renderer.width(node.getName()) + 32);
     }
 
     public Segment[] calculateSegments() {
@@ -77,8 +77,8 @@ public class NodeWidget extends ClickableWidget {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Stolen from PressableWidget and tweaked
         if (!this.active || !this.visible) return false;
-        if (KeyCodes.isToggle(keyCode)) {
-            this.playDownSound(MinecraftClient.getInstance().getSoundManager());
+        if (CommonInputs.selected(keyCode)) {
+            this.playDownSound(Minecraft.getInstance().getSoundManager());
             var area = parent.getArea();
             area.setContextMenu((int) area.reverseModifyX(getX()), (int) area.reverseModifyY(getY()), this);
             return true;
@@ -120,7 +120,7 @@ public class NodeWidget extends ClickableWidget {
         dragY = (int) (getY() - mouseY);
 
         if (NodeConfigScreenRegistry.hasConfig(node) && isMouseOnButton(mouseX, mouseY)) {
-            MinecraftClient.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(node, parent));
+            Minecraft.getInstance().setScreen(NodeConfigScreenRegistry.createScreen(node, parent));
             return;
         }
 
@@ -152,29 +152,29 @@ public class NodeWidget extends ClickableWidget {
     }
 
     public void updateTooltip() {
-        var tooltip = new ArrayList<Text>();
+        var tooltip = new ArrayList<Component>();
         var hasError = !node.validate().isEmpty() || !node.isFullyConnected();
 
         if (NodeConfigScreenRegistry.hasConfig(node))
-            tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip").formatted(Formatting.WHITE));
+            tooltip.add(Component.translatable("nodeflow.editor.button.config.tooltip").withStyle(ChatFormatting.WHITE));
         if (hasError)
-            tooltip.add(Text.translatable("nodeflow.editor.button.config.tooltip.errors").formatted(Formatting.RED));
+            tooltip.add(Component.translatable("nodeflow.editor.button.config.tooltip.errors").withStyle(ChatFormatting.RED));
 
         if (!node.validate().isEmpty())
-            tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.invalid_config").formatted(Formatting.RED)));
+            tooltip.add(Component.literal("  ").append(Component.translatable("nodeflow.editor.button.config.tooltip.invalid_config").withStyle(ChatFormatting.RED)));
         if (!node.isFullyConnected())
-            tooltip.add(Text.literal("  ").append(Text.translatable("nodeflow.editor.button.config.tooltip.not_connected").formatted(Formatting.RED)));
+            tooltip.add(Component.literal("  ").append(Component.translatable("nodeflow.editor.button.config.tooltip.not_connected").withStyle(ChatFormatting.RED)));
 
-         setTooltip(Tooltip.of(Texts.join(tooltip, Text.literal("\n"))));
+         setTooltip(Tooltip.create(ComponentUtils.formatList(tooltip, Component.literal("\n"))));
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
         var textRenderer = Screens.getTextRenderer(parent);
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, texture, getX(), getY(), width, height, tagColor | 0xff000000);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, texture, getX(), getY(), width, height, tagColor | 0xff000000);
 
         var color = 0xffffffff;
         // Status indicator / config button
@@ -186,38 +186,38 @@ public class NodeWidget extends ClickableWidget {
             color = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty()) {
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
+            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
         } else if (NodeConfigScreenRegistry.hasConfig(node)) {
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
+            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
         }
 
         for (var segment : calculateSegments()) {
             segment.render(context, mouseX, mouseY);
         }
 
-        context.drawText(textRenderer, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
+        context.drawString(textRenderer, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
 
         // Used to hide tooltip
         if (!isMouseOnButton(mouseX, mouseY)) {
-            hovered = false;
+            isHovered = false;
         }
     }
 
     @Override
-    public Text getMessage() {
+    public Component getMessage() {
         return node.getName();
     }
 
     @Nullable
     @Override
-    public GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
+    public ComponentPath nextFocusPath(FocusNavigationEvent navigation) {
         var area = parent.getArea();
         if (area.reverseModifyX(getX() + width) < area.x ||
             area.reverseModifyY(getY() + height) < area.y ||
             area.reverseModifyX(getX()) > area.x + area.width ||
             area.reverseModifyY(getY()) > area.y + area.height) return null;
 
-        return super.getNavigationPath(navigation);
+        return super.nextFocusPath(navigation);
     }
 
     public EditorScreen getParent() {
@@ -225,9 +225,9 @@ public class NodeWidget extends ClickableWidget {
     }
 
     @Override
-    public ScreenRect getNavigationFocus() {
+    public ScreenRectangle getRectangle() {
         var area = parent.getArea();
-        return new ScreenRect((int) area.reverseModifyX(this.getX()),
+        return new ScreenRectangle((int) area.reverseModifyX(this.getX()),
                 (int) area.reverseModifyY(this.getY()),
                 (int) area.reverseModifyDeltaX(this.getWidth()),
                 (int) area.reverseModifyDeltaY(this.getHeight()));
@@ -262,7 +262,7 @@ public class NodeWidget extends ClickableWidget {
             return mouseX > getConnectorX() - 2 && mouseX < getConnectorX() + 6 && mouseY > getConnectorY() - 2 && mouseY < getConnectorY() + 6;
         }
 
-        public void render(DrawContext context, int mouseX, int mouseY) {
+        public void render(GuiGraphics context, int mouseX, int mouseY) {
             var textRenderer = Screens.getTextRenderer(parent);
 
             var brightness = hasConnectorAt(mouseX, mouseY) ? 2 : 1;
@@ -272,12 +272,12 @@ public class NodeWidget extends ClickableWidget {
                     Math.min((color >> 8 & 0xff) * brightness, 0xff) << 8 |
                     Math.min((color & 0xff) * brightness, 0xff);
 
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
+            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
             if (!isOutput)
-                context.drawText(textRenderer, this.connector.id(), x + 16, y + 2, 0xff404040, false);
+                context.drawString(textRenderer, this.connector.id(), x + 16, y + 2, 0xff404040, false);
             else
-                context.drawText(textRenderer, this.connector.id(), x + width - 16 - textRenderer.getWidth(this.connector.id()), y + 2, 0xff404040, false);
+                context.drawString(textRenderer, this.connector.id(), x + width - 16 - textRenderer.width(this.connector.id()), y + 2, 0xff404040, false);
         }
     }
 }

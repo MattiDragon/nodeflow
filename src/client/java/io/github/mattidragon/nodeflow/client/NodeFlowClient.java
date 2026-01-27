@@ -23,11 +23,11 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.text.Text;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -36,14 +36,14 @@ import java.util.List;
 public class NodeFlowClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        HandledScreens.<EditorScreenHandler, HandledEditorScreen>register(NodeFlow.SCREEN_HANDLER, HandledEditorScreen::new);
+        MenuScreens.<EditorScreenHandler, HandledEditorScreen>register(NodeFlow.SCREEN_HANDLER, HandledEditorScreen::new);
         ControlifyProxy.INSTANCE.register();
         NodeConfigScreenRegistry.registerDefaults();
         NodeGroup.registerCodec(ClientTagNodeGroup.DECODER_ID, ClientTagNodeGroup.CODEC);
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            var debugEditorKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.nodeflow.debug", GLFW.GLFW_KEY_K, "key.categories.nodeflow"));
-            var devKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.nodeflow.dev", GLFW.GLFW_KEY_M, "key.categories.nodeflow"));
+            var debugEditorKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.nodeflow.debug", GLFW.GLFW_KEY_K, "key.categories.nodeflow"));
+            var devKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.nodeflow.dev", GLFW.GLFW_KEY_M, "key.categories.nodeflow"));
             var graph = new Graph(new GraphEnvironment(DataType.REGISTRY.stream().toList(),
                     ContextType.REGISTRY.stream().toList(),
                     List.of(new TagNodeGroup(NodeTypeTags.LOGIC),
@@ -56,23 +56,23 @@ public class NodeFlowClient implements ClientModInitializer {
                             DirectNodeGroup.misc(NodeType.REGISTRY.stream().toArray(NodeType[]::new)))));
 
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
-                while (debugEditorKey.wasPressed())
-                    client.setScreen(new EditorScreen(Text.literal("Test Editor"), graph));
+                while (debugEditorKey.consumeClick())
+                    client.setScreen(new EditorScreen(Component.literal("Test Editor"), graph));
 
-                while (devKey.wasPressed()) {
-                    var screen = new Screen(Text.literal("Test Zoom Areas")) {
-                        private ZoomableAreaWidget<ButtonWidget> widget;
+                while (devKey.consumeClick()) {
+                    var screen = new Screen(Component.literal("Test Zoom Areas")) {
+                        private ZoomableAreaWidget<Button> widget;
 
                         @Override
                         protected void init() {
                             super.init();
-                            widget = addDrawableChild(new ZoomableAreaWidget<>(64, 64, width - 128, height - 128));
+                            widget = addRenderableWidget(new ZoomableAreaWidget<>(64, 64, width - 128, height - 128));
 
-                            widget.add(ButtonWidget.builder(Text.literal("1"), button -> System.out.println("1")).dimensions(0, 0, 20, 20).build());
-                            widget.add(ButtonWidget.builder(Text.literal("2"), button -> System.out.println("2")).dimensions(0, 30, 20, 20).build());
-                            widget.add(ButtonWidget.builder(Text.literal("3"), button -> System.out.println("3")).dimensions(30, 0, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("1"), button -> System.out.println("1")).bounds(0, 0, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("2"), button -> System.out.println("2")).bounds(0, 30, 20, 20).build());
+                            widget.add(Button.builder(Component.literal("3"), button -> System.out.println("3")).bounds(30, 0, 20, 20).build());
 
-                            //addDrawableChild(new ButtonWidget(0, 0, 20, 20, Text.literal("+"), button -> {}));
+                            //addDrawableChild(new Button(0, 0, 20, 20, Component.literal("+"), button -> {}));
                         }
 
                         @Override

@@ -2,15 +2,14 @@ package io.github.mattidragon.nodeflow.graph;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Uuids;
-
 import java.util.UUID;
+import net.minecraft.core.UUIDUtil;
 
 public record Connection(UUID targetUuid, String targetName, UUID sourceUuid, String sourceName) {
     public static final Codec<Connection> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Uuids.CODEC.fieldOf("inputUuid").forGetter(Connection::targetUuid),
+            UUIDUtil.AUTHLIB_CODEC.fieldOf("inputUuid").forGetter(Connection::targetUuid),
             Codec.STRING.fieldOf("inputName").forGetter(Connection::targetName),
-            Uuids.CODEC.fieldOf("outputUuid").forGetter(Connection::sourceUuid),
+            UUIDUtil.AUTHLIB_CODEC.fieldOf("outputUuid").forGetter(Connection::sourceUuid),
             Codec.STRING.fieldOf("outputName").forGetter(Connection::sourceName)
     ).apply(instance, Connection::new));
 

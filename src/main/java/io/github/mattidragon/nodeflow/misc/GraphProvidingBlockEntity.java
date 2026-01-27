@@ -3,15 +3,15 @@ package io.github.mattidragon.nodeflow.misc;
 import io.github.mattidragon.nodeflow.graph.Graph;
 import io.github.mattidragon.nodeflow.screen.EditorScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerContext;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -24,13 +24,13 @@ public abstract class GraphProvidingBlockEntity extends BlockEntity implements G
     }
 
     @Override
-    public Graph getScreenOpeningData(ServerPlayerEntity player) {
-        return getGraph(world, pos);
+    public Graph getScreenOpeningData(ServerPlayer player) {
+        return getGraph(level, worldPosition);
     }
 
     @Nullable
     @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-        return new EditorScreenHandler(syncId, this, ScreenHandlerContext.create(world, pos));
+    public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
+        return new EditorScreenHandler(syncId, this, ContainerLevelAccess.create(level, worldPosition));
     }
 }
