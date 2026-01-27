@@ -7,20 +7,32 @@ on:
         description: The type of release
         required: true
         type: choice
-        options: ["release", "beta", "alpha"]
-      minecraft-versions:
-        description: Overrides for supported versions
+        options: ["stable", "beta", "alpha"]
+      modrinth-mc-version:
+        description: The minecraft version on modrinth
         required: false
         type: string
 
 jobs:
   publish:
-    uses: MattiDragon/MattiDragon/.github/workflows/publish-mc-mod.yaml@00051ad2ae1350c882ab08a382d4dda38eff121b
-    with:
-      version-type: ${{ inputs.version-type }}
-      minecraft-versions: ${{ inputs.minecraft-versions }}
-      java-version: 21
-      modrinth-id: ktKs9gT1
-      jitpack-safe-version: true
-    secrets:
-      modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Publish
+        run: ./gradlew publishMods
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TYPE: ${{ inputs.version-type }}
+          GITHUB_BRANCH: ${{ github.ref }}
+          MODRINTH_MC_VERSION: ${{ inputs.modrinth-mc-version }}

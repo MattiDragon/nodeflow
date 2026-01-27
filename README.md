@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.mattidragon:nodeflow:$nodeflow_version'
+    implementation 'dev.mattidragon:nodeflow:$nodeflow_version'
 }
 ```
 
@@ -18,7 +18,7 @@ To get started you will want to create a `GraphEnvironment`. Most mods will only
 ```java
 public static final GraphEnvironment ENVIRONMENT = GraphEnvironment.builder()
         // Adds context that nodes need to execute. Stays same during each evaluation
-        .addContextTypes(ContextType.SERVER_WORLD, ContextType.BLOCK_POS, ContextType.SERVER)
+        .addContextTypes(ContextType.SERVER_LEVEL, ContextType.BLOCK_POS, ContextType.SERVER)
         // Datatypes that are allowed to be used. Exists for nodes that can act on any data type to know which ones are allowed
         .addDataTypes(DataType.BOOLEAN, DataType.NUMBER, DataType.STRING)
         // Adds groups of nodes at a time. They are also used for grouping in the editor.

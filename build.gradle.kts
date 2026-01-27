@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.publish.mod)
     `maven-publish`
 }
 
@@ -67,6 +68,39 @@ java {
 tasks.jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName}" }
+    }
+}
+
+publishMods {
+    val mcVersion = libs.versions.minecraft.get()
+    val modVersion = properties["mod_version"] as String
+
+    file = tasks.jar.get().archiveFile
+    additionalFiles.from(tasks["sourcesJar"])
+
+    displayName = "v$modVersion [$mcVersion]"
+    changelog = providers.fileContents(layout.projectDirectory.file("changelog/$modVersion+$mcVersion.md")).asText
+
+    type.set(providers.environmentVariable("RELEASE_TYPE").map { me.modmuss50.mpp.ReleaseType.of(it) })
+    modLoaders.addAll("fabric")
+
+    dryRun = providers.gradleProperty("publish_dry_run").isPresent
+
+    modrinth {
+        projectId = "ktKs9gT1"
+        accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
+
+        requires("fabric-api")
+
+        minecraftVersions.add(providers.environmentVariable("MODRINTH_MC_VERSION").filter { it.isNotBlank() }.orElse(mcVersion))
+    }
+
+    github {
+        repository = "MattiDragon/nodeflow"
+        accessToken.set(providers.environmentVariable("GITHUB_TOKEN"))
+
+        commitish.set(providers.environmentVariable("GITHUB_BRANCH"))
+        tagName.set(version.map { it.replace('+', '-') })
     }
 }
 

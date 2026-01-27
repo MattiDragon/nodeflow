@@ -1,9 +1,10 @@
 [versions]
-minecraft = "26.1-snapshot-4"
+minecraft = "26.1-snapshot-5"
 fabric_loader = "0.18.4"
-fabric_api = "0.142.2+26.1"
+fabric_api = "0.142.3+26.1"
 fabric_loom = "1.15-SNAPSHOT"
 controlify = "2.5.2+1.21.11-neoforge"
+mod_publish = "1.1.0"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
@@ -13,3 +14,4 @@ controlify = { module = "dev.isxander:controlify", version.ref = "controlify" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric_loom" }
+publish-mod = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mod_publish" }
