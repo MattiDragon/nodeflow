@@ -11,7 +11,7 @@ import io.github.mattidragon.nodeflow.graph.node.group.NodeGroup;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.Renderable;
@@ -351,14 +351,14 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        renderArea(context);
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractBackground(graphics, mouseX, mouseY, delta);
+        renderArea(graphics);
     }
 
-    private void renderArea(GuiGraphics context) {
+    private void renderArea(GuiGraphicsExtractor graphics) {
         var texture = area.isFocused() && minecraft.getLastInputType().isKeyboard() ? NodeFlow.id("editor_selected") : NodeFlow.id("editor");
-        context.blitSprite(RenderPipelines.GUI_TEXTURED, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, texture, BORDER_OFFSET, BORDER_OFFSET, getBoxWidth() + BORDER_SIZE * 2, getBoxHeight() + BORDER_SIZE * 2);
     }
 
     public boolean isDeletingNode() {
@@ -393,12 +393,12 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        protected void renderListSeparators(GuiGraphics context) {
+        protected void extractListSeparators(GuiGraphicsExtractor graphics) {
             // Overridden to disable background
         }
 
         @Override
-        protected void renderListBackground(GuiGraphics context) {
+        protected void extractListBackground(GuiGraphicsExtractor graphics) {
             // Overridden to disable background
         }
 
@@ -423,10 +423,10 @@ public class EditorScreen extends Screen {
         }
 
         @Override
-        protected void renderListItems(GuiGraphics context, int mouseX, int mouseY, float delta) {
-            context.enableScissor(0, getY(), width + GRID_OFFSET, height + getY());
-            super.renderListItems(context, mouseX, mouseY, delta);
-            context.disableScissor();
+        protected void extractListItems(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+            graphics.enableScissor(0, getY(), width + GRID_OFFSET, height + getY());
+            super.extractListItems(graphics, mouseX, mouseY, delta);
+            graphics.disableScissor();
         }
 
         @Nullable
@@ -456,12 +456,12 @@ public class EditorScreen extends Screen {
             }
 
             @Override
-            public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float a) {
+            public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float a) {
                 for (int i = 0; i < buttons.size(); i++) {
                     var button = buttons.get(i);
                     button.setY(getContentY());
                     button.setX(getContentX() + i * 110);
-                    button.render(graphics, mouseX, mouseY, a);
+                    button.extractRenderState(graphics, mouseX, mouseY, a);
                 }
             }
         }

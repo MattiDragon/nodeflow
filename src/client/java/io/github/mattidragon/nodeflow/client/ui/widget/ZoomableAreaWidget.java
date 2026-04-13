@@ -2,7 +2,7 @@ package io.github.mattidragon.nodeflow.client.ui.widget;
 
 import com.google.common.collect.Lists;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -210,10 +210,10 @@ public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & Narrat
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         if (!visible) return;
-        var matrices = context.pose();
-        context.enableScissor(x, y, x + width, y + height);
+        var matrices = graphics.pose();
+        graphics.enableScissor(x, y, x + width, y + height);
         matrices.pushMatrix();
         matrices.translate(x, y);
         matrices.translate((float) (viewX + width / 2.0), (float) (viewY + height / 2.0));
@@ -221,16 +221,16 @@ public class ZoomableAreaWidget<T extends GuiEventListener & Renderable & Narrat
         matrices.scale(scale, scale);
 
         for (var child : Lists.reverse(children)) {
-            child.render(context, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), delta);
+            child.extractRenderState(graphics, (int) Math.floor(modifyX(mouseX)), (int) Math.floor(modifyY(mouseY)), a);
         }
 
-        renderExtras(context, mouseX, mouseY, delta);
+        extractExtras(graphics, mouseX, mouseY, a);
 
         matrices.popMatrix();
-        context.disableScissor();
+        graphics.disableScissor();
     }
 
-    protected void renderExtras(GuiGraphics matrices, int mouseX, int mouseY, float delta) {}
+    protected void extractExtras(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {}
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {

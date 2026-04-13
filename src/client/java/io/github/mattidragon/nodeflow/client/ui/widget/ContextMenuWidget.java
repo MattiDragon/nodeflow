@@ -6,7 +6,7 @@ import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -156,9 +156,9 @@ public class ContextMenuWidget extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         for (var button : widgets) {
-            button.render(context, mouseX, mouseY, delta);
+            button.extractRenderState(graphics, mouseX, mouseY, a);
         }
     }
 

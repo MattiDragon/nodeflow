@@ -9,7 +9,7 @@ import io.github.mattidragon.nodeflow.graph.node.Node;
 import io.github.mattidragon.nodeflow.graph.node.NodeTag;
 import io.github.mattidragon.nodeflow.graph.node.NodeType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -269,17 +269,17 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        contextMenu.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
+        contextMenu.extractRenderState(graphics, mouseX, mouseY, a);
     }
 
     @Override
-    protected void renderExtras(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        renderConnectors(context, mouseX, mouseY);
+    protected void extractExtras(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        renderConnectors(graphics, mouseX, mouseY);
     }
 
-    private void renderConnectors(GuiGraphics context, int mouseX, int mouseY) {
+    private void renderConnectors(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (parent.connectingConnector != null) {
             var row = parent.findSegmentAt(mouseX, mouseY);
             var targetX = (int) modifyX(mouseX);
@@ -292,18 +292,18 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
 
             var connectingSegment = Objects.requireNonNull(parent.findSegment(parent.connectingConnector));
 
-            renderConnectorLine(context, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color());
+            renderConnectorLine(graphics, targetX, targetY, connectingSegment.getConnectorX(), connectingSegment.getConnectorY(), parent.connectingConnector.type().color());
         }
 
         for (Connection connection : parent.graph.getConnections()) {
             var input = Objects.requireNonNull(parent.findSegment(Objects.requireNonNull(connection.getTargetConnector(parent.graph))));
             var output = Objects.requireNonNull(parent.findSegment(Objects.requireNonNull(connection.getSourceConnector(parent.graph))));
 
-            renderConnectorLine(context, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color());
+            renderConnectorLine(graphics, input.getConnectorX(), input.getConnectorY(), output.getConnectorX(), output.getConnectorY(), input.connector.type().color());
         }
     }
 
-    private static void renderConnectorLine(GuiGraphics context, int x1, int y1, int x2, int y2, int color) {
+    private static void renderConnectorLine(GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int color) {
         var xOffset = (x1 - x2) / 2;
         var yOffset = y1 - y2;
 
@@ -322,35 +322,35 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
         if (xOffset == 0) {
             // No x-offset: We render up and down connectors
             var vOffset = yOffset < 0 ? -2 : 2;
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 10 + vOffset, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 10 - vOffset, 4, 4, 12, 20, color);
         } else if (xOffset > 0) {
             // Positive x-offset: We render left and right connectors
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 0, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 4, 4, 4, 12, 20, color);
         } else {
             // Negative x-offset: We render left and right connectors, but different
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
-            context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x2, y2, 8, 4, 4, 4, 12, 20, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1, y1, 8, 0, 4, 4, 12, 20, color);
         }
 
         // If the x-offset isn't zero we render the horizontal paths
         if (xOffset > 0) {
-            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
-            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + 4, y2, 0, 0, xOffset - 4 + pixelFix, 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset + 4, y1, 0, 0, xOffset - 4, 4, 4, 4, color);
         } else if (xOffset != 0) {
-            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
-            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x2 + xOffset + 4 + pixelFix, y2, 0, 0, -xOffset - 4 - pixelFix, 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 + 4, y1, 0, 0, -xOffset - 4, 4, 4, 4, color);
         }
 
         // Render the vertical path
         if (yOffset == 0) {
             // Special case, not y-offset: render a horizontal square
-            context.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, horizontalTexture, x1 - xOffset, y1, 0, 0, 4, 4, 4, 4, color);
         } else if (yOffset > 0) {
-            context.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 - yOffset + 4, 0, 0, 4, yOffset - 4, 4, 4, color);
         } else {
-            context.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, verticalTexture, x1 - xOffset, y1 + 4, 0, 0, 4, -yOffset - 4, 4, 4, color);
         }
 
         // Render corners. If the either offset is zero then there are no corners
@@ -360,28 +360,28 @@ public class EditorAreaWidget extends ZoomableAreaWidget<NodeWidget> {
                 var cornerU = xOffset < 0 ? 4 : 0;
                 if (yOffset == -1) {
                     // Special case: short y-offsets have special textures
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == -2) {
                     // Special case: short y-offsets have special textures
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 4, 4, 4, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 0, 4, 4, 12, 20, color);
                 }
             } else {
                 // Select which set of corners to use
                 var cornerU = xOffset < 0 ? 0 : 4;
                 if (yOffset == 1) {
                     // Special case: short y-offsets have special textures
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 14, 4, 5, 12, 20, color);
                 } else if (yOffset == 2) {
                     // Special case: short y-offsets have special textures
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 8, 4, 6, 12, 20, color);
                 } else {
                     // Normal case: render corners (one pixel of overlap works fine with the textures)
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
-                    context.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1 - yOffset, cornerU, 0, 4, 4, 12, 20, color);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, cornersTexture, x1 - xOffset, y1, cornerU, 4, 4, 4, 12, 20, color);
                 }
             }
         }

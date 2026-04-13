@@ -9,7 +9,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -163,12 +163,12 @@ public class NodeWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         var font = parent.getFont();
 
         var texture = isFocused() ? NodeFlow.id("node_selected") : NodeFlow.id("node");
         var tagColor = node.tag.getColor();
-        context.blitSprite(RenderPipelines.GUI_TEXTURED, texture, getX(), getY(), width, height, tagColor | 0xff000000);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, texture, getX(), getY(), width, height, tagColor | 0xff000000);
 
         var color = 0xffffffff;
         // Status indicator / config button
@@ -180,16 +180,16 @@ public class NodeWidget extends AbstractWidget {
             color = 0xff9999ff;
 
         if (!node.isFullyConnected() || !node.validate().isEmpty()) {
-            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button_error"), getX() + width - 20, getY() + 4, 16, 16, color);
         } else if (NodeConfigScreenRegistry.hasConfig(node)) {
-            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("config_button"), getX() + width - 20, getY() + 4, 16, 16, color);
         }
 
         for (var segment : calculateSegments()) {
-            segment.render(context, mouseX, mouseY);
+            segment.extract(graphics, mouseX, mouseY);
         }
 
-        context.drawString(font, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
+        graphics.text(font, getMessage(), getX() + 7, getY() + 7, 0xff404040, false);
 
         // Used to hide tooltip
         if (!isMouseOnButton(mouseX, mouseY)) {
@@ -256,7 +256,7 @@ public class NodeWidget extends AbstractWidget {
             return mouseX > getConnectorX() - 2 && mouseX < getConnectorX() + 6 && mouseY > getConnectorY() - 2 && mouseY < getConnectorY() + 6;
         }
 
-        public void render(GuiGraphics context, int mouseX, int mouseY) {
+        public void extract(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
             var font = parent.getFont();
 
             var brightness = hasConnectorAt(mouseX, mouseY) ? 2 : 1;
@@ -266,12 +266,12 @@ public class NodeWidget extends AbstractWidget {
                     Math.min((color >> 8 & 0xff) * brightness, 0xff) << 8 |
                     Math.min((color & 0xff) * brightness, 0xff);
 
-            context.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, NodeFlow.id("connector"), getConnectorX(), getConnectorY(), 4, 4, color);
 
             if (!isOutput)
-                context.drawString(font, this.connector.id(), x + 16, y + 2, 0xff404040, false);
+                graphics.text(font, this.connector.id(), x + 16, y + 2, 0xff404040, false);
             else
-                context.drawString(font, this.connector.id(), x + width - 16 - font.width(this.connector.id()), y + 2, 0xff404040, false);
+                graphics.text(font, this.connector.id(), x + width - 16 - font.width(this.connector.id()), y + 2, 0xff404040, false);
         }
     }
 }

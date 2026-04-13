@@ -17,8 +17,8 @@ repositories {
     maven("https://maven.quiltmc.org/repository/release")
     maven("https://api.modrinth.com/maven")
     maven("https://maven.isxander.dev/releases")
-    maven("https://maven.isxander.dev/snapshots")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://maven.nucleoid.xyz")
+    mavenCentral()
     maven("https://jitpack.io") {
         content {
             includeGroupAndSubgroups("com.github")
@@ -33,9 +33,10 @@ dependencies {
     implementation(libs.fabric.loader)
 
     compileOnly(libs.controlify) {
+        // Avoid pulling in unnecessary deps (why are these api?)
         exclude(group = "net.fabricmc.fabric-api")
-        exclude(group = "maven.modrinth", module = "sodium")
-        exclude(group = "maven.modrinth", module = "iris")
+        exclude(group = "dev.isxander", module = "yet-another-config-lib")
+        exclude(group = "net.caffeinemc", module = "sodium-fabric")
     }
     implementation(libs.fabric.api)
 }

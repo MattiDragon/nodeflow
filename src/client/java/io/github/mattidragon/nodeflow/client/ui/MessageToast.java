@@ -1,7 +1,7 @@
 package io.github.mattidragon.nodeflow.client.ui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -28,14 +28,14 @@ public class MessageToast implements Toast {
     }
 
     @Override
-    public void render(GuiGraphics context, Font textRenderer, long startTime) {
+    public void extractRenderState(GuiGraphicsExtractor context, Font font, long startTime) {
         context.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, this.width(), this.height());
-        var text = textRenderer.split(title, 140);
+        var text = font.split(title, 140);
         if (text.size() == 1) {
-            context.drawString(textRenderer, text.getFirst(), 7, 13, 0xffffffff, false);
+            context.text(font, text.getFirst(), 7, 13, 0xffffffff, false);
         } else {
             for (var i = 0; i < text.size(); ++i) {
-                context.drawString(textRenderer, text.get(i), 7, (7 + i * 12), 0xffffffff, false);
+                context.text(font, text.get(i), 7, (7 + i * 12), 0xffffffff, false);
             }
         }
     }

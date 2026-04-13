@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(AbstractWidget.class)
 public class AbstractWidgetMixin {
     @SuppressWarnings({"UnreachableCode", "ConstantValue"})
-    @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;containsPointInScissor(II)Z"))
+    @ModifyArgs(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;containsPointInScissor(II)Z"))
     private void tweakScissorCheckForNodes(Args args) {
         if (!((Object) this instanceof NodeWidget node)) return;
         var editor = node.getParent().getArea();
@@ -18,7 +18,7 @@ public class AbstractWidgetMixin {
     }
 
     @SuppressWarnings({"UnreachableCode", "ConstantValue"})
-    @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/WidgetTooltipHolder;refreshTooltipForNextRenderPass(Lnet/minecraft/client/gui/GuiGraphics;IIZZLnet/minecraft/client/gui/navigation/ScreenRectangle;)V"))
+    @ModifyArgs(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/WidgetTooltipHolder;refreshTooltipForNextRenderPass(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIZZLnet/minecraft/client/gui/navigation/ScreenRectangle;)V"))
     private void tweakTooltipMousePos(Args args) {
         if (!((Object) this instanceof NodeWidget node)) return;
         var editor = node.getParent().getArea();
